@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Research — Elysiandex</title>
+<meta name="description" content="Research articles on dexterous manipulation, robotics hardware, and AI for embodied intelligence.">
+<link rel="icon" href="../assets/logo/LOGO.png">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans',sans-serif;font-weight:300;color:#111;background:#fff;-webkit-font-smoothing:antialiased;line-height:1.5}
+a{color:inherit;text-decoration:none}
+
+.topbar{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid #eee}
+.topbar__inner{max-width:1200px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:60px}
+.topbar__logo img{height:24px}
+.topbar__back{font-size:.8125rem;color:#666;font-weight:500;transition:color .2s}
+.topbar__back:hover{color:#000}
+
+/* Background image section */
+.hero-bg{position:relative;width:100%;height:400px;overflow:hidden}
+.hero-bg img{width:100%;height:100%;object-fit:cover}
+.hero-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.3),rgba(0,0,0,.1))}
+
+.page{max-width:900px;margin:0 auto;padding:48px 24px 80px}
+.page h1{font-size:2.25rem;font-weight:700;margin-bottom:8px;letter-spacing:-.02em}
+.page .subtitle{font-size:1rem;color:#888;margin-bottom:48px}
+
+.blog-list{display:flex;flex-direction:column;gap:32px}
+
+.blog-card{display:block;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.8);border-radius:16px;padding:28px 32px;transition:all .3s;box-shadow:0 4px 20px rgba(0,0,0,.08)}
+.blog-card:hover{background:#fff;border-color:#ccc;box-shadow:0 8px 30px rgba(0,0,0,.12);transform:translateY(-2px)}
+.blog-card__title{font-size:1.375rem;font-weight:600;color:#111;margin-bottom:8px;line-height:1.35}
+.blog-card:hover .blog-card__title{color:#000}
+.blog-card__meta{font-size:.8125rem;color:#999;margin-bottom:12px;display:flex;gap:16px;flex-wrap:wrap}
+.blog-card__desc{font-size:.9375rem;color:#555;line-height:1.6}
+.blog-card__arrow{display:inline-flex;align-items:center;gap:6px;font-size:.875rem;font-weight:500;color:#000;margin-top:12px;transition:gap .2s}
+.blog-card:hover .blog-card__arrow{gap:10px}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar__inner">
+    <a href="../index.html"><span style="font-size:1.25rem;font-weight:600;letter-spacing:.05em">ElysianDex</span></a>
+    <a href="../index.html" class="topbar__back">← Back to Home</a>
+  </div>
+</header>
+
+<!-- Hero Background Image -->
+<div class="hero-bg">
+  <img src="../assets/images/background2.png" alt="Research Background" loading="eager">
+</div>
+
+<div class="page">
+  <h1>Research</h1>
+  <p class="subtitle">Deep dives into dexterous manipulation, actuator design, and embodied AI</p>
+
+  <div class="blog-list">
+
+    <!-- Blog 1 -->
+    <a href="researchBlogs/research-dexterity-deadlocks.html" class="blog-card">
+      <div class="blog-card__title">The Dexterity Deadlock</div>
+      <div class="blog-card__meta">
+        <span>February 12, 2026</span>
+        <span>·</span>
+        <span>Quanting Xie, Tongzhou Liao, Yonatan Bisk</span>
+        <span>·</span>
+        <span>Origami Robotics</span>
+      </div>
+      <div class="blog-card__desc">
+        Robot dexterity is stuck behind one hardware problem: the gearbox. High-ratio gearboxes break sim-to-real transfer, destroy force transparency, and are the first thing to wear out. This post explains why — and what we did about it. Covers the geometric curse (τ ∝ r³), N² impedance mismatch, information-theoretic analysis of actuator transparency, and how axial flux motors enabled a drop from 288:1 to 15:1 gear ratio.
+      </div>
+      <span class="blog-card__arrow">Read article →</span>
+    </a>
+
+    <!-- Blog 2 -->
+    <a href="researchBlogs/research-gearbox-analysis.html" class="blog-card">
+      <div class="blog-card__title">全驱动高自由度灵巧手减速箱方案全景分析——兼论Sharpa直驱路线的技术逻辑与产业影响</div>
+      <div class="blog-card__meta">
+        <span>June 2, 2026</span>
+        <span>·</span>
+        <span>完整研究报告</span>
+        <span>·</span>
+        <span>中文</span>
+      </div>
+      <div class="blog-card__desc">
+        全驱动灵巧手减速传动的完整技术全景：六大减速方案（谐波/行星/蜗杆/丝杠/QDD/直驱+腱绳）多维度性能梯度对比，五款主流产品（Shadow/Allegro/LEAP/Psyonic/灵心S1）工程选型路径分析，SharpaWave直驱架构技术逻辑深度解构，QDD+触觉产业新范式与Sharpa/Tesla两条路线竞争展望。30+文献引用。
+      </div>
+      <span class="blog-card__arrow">Read article →</span>
+    </a>
+
+  </div>
+</div>
+
+<!-- Footer -->
+<footer style="background:#f9f9f9;color:#111;padding:48px 0 32px;margin-top:80px">
+  <div style="max-width:900px;margin:0 auto;padding:0 24px;text-align:center">
+    <div style="font-size:1.5rem;font-weight:300;letter-spacing:.1em;margin-bottom:16px;color:#333">Spirit of Dexterity. Reaching the Ultimate Centimeter</div>
+    <div style="font-size:.8125rem;color:#999;margin-bottom:8px">© 2026 Elysiandex. All rights reserved.</div>
+    <div style="font-size:.75rem;color:#bbb">Built with precision for the future of robotic manipulation</div>
+  </div>
+</footer>
+
+</body>
+</html>

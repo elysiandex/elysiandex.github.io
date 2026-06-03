@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin Panel — Elysiandex</title>
+<link rel="icon" href="../assets/logo/LOGO.png">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans',sans-serif;font-weight:400;color:#111;background:#f5f5f7;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh}
+a{color:inherit;text-decoration:none}
+input,select,button{font-family:inherit}
+:root{--radius:12px}
+
+/* ========== LOGIN PAGE ========== */
+.login-page{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f5f5f7}
+.login-box{background:#fff;border-radius:20px;padding:40px 32px;width:90%;max-width:400px;box-shadow:0 4px 40px rgba(0,0,0,.06)}
+.login-box h2{font-size:1.5rem;font-weight:700;margin-bottom:4px}
+.login-box .subtitle{font-size:.8125rem;color:#999;margin-bottom:24px}
+.login-box .logo{text-align:center;margin-bottom:24px}
+.login-box .logo img{height:32px;display:inline-block}
+
+/* ========== DASHBOARD ========== */
+.dashboard{display:none;min-height:100vh}
+.sidebar{background:#111;color:#fff;width:240px;position:fixed;top:0;left:0;bottom:0;padding:24px 0;overflow-y:auto;z-index:10}
+.sidebar__logo{padding:0 20px 24px;border-bottom:1px solid #333;margin-bottom:16px}
+.sidebar__logo img{height:24px;filter:brightness(0) invert(1)}
+.sidebar__nav a{display:flex;align-items:center;gap:10px;padding:12px 20px;font-size:.875rem;color:#aaa;transition:all .2s}
+.sidebar__nav a:hover,.sidebar__nav a.active{color:#fff;background:#222}
+.sidebar__user{padding:16px 20px;border-top:1px solid #333;margin-top:auto;position:absolute;bottom:0;left:0;right:0;font-size:.75rem;color:#999}
+.main-content{margin-left:240px;padding:32px}
+.top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:32px}
+.top-bar h1{font-size:1.75rem;font-weight:700}
+.top-bar__actions{display:flex;gap:8px}
+
+/* ========== STATS ========== */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:32px}
+.stat-card{background:#fff;border-radius:var(--radius);padding:20px;border:1px solid #eee}
+.stat-card__label{font-size:.75rem;color:#999;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.stat-card__value{font-size:2rem;font-weight:700}
+
+/* ========== TABLE ========== */
+.panel{background:#fff;border-radius:var(--radius);border:1px solid #eee;overflow:hidden;margin-bottom:24px}
+.panel__header{padding:16px 20px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center}
+.panel__title{font-weight:700}
+.table-wrapper{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.8125rem}
+th{text-align:left;padding:12px 16px;background:#fafafa;font-weight:600;font-size:.75rem;text-transform:uppercase;color:#666;white-space:nowrap}
+td{padding:12px 16px;border-bottom:1px solid #f3f3f3;white-space:nowrap}
+tr:hover td{background:#fafafa}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.6875rem;font-weight:600}
+.badge-pending{background:#fef3c7;color:#d97706}
+.badge-paid{background:#d1fae5;color:#059669}
+.badge-shipped{background:#dbeafe;color:#2563eb}
+
+/* ========== FORM ========== */
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:.75rem;font-weight:600;color:#555;margin-bottom:4px}
+.form-group label .req{color:#e53e3e}
+.form-group input,.form-group select{width:100%;padding:10px 14px;border:1px solid #e0e0e0;border-radius:8px;font-size:.8125rem;outline:none;transition:border .2s}
+.form-group input:focus,.form-group select:focus{border-color:#000}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 20px;border-radius:999px;border:none;font-size:.8125rem;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit}
+.btn-dark{background:#000;color:#fff}
+.btn-dark:hover{background:#222}
+.btn-outline{background:#fff;color:#666;border:1px solid #ddd}
+.btn-outline:hover{background:#f5f5f7}
+.btn-green{background:#10b981;color:#fff}
+.btn-green:hover{background:#059669}
+.btn-red{background:#e53e3e;color:#fff}
+.btn-red:hover{background:#dc2626}
+.btn-sm{padding:6px 14px;font-size:.75rem}
+
+.toast{position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:12px 24px;border-radius:10px;font-size:.875rem;font-weight:500;z-index:200;opacity:0;pointer-events:none;transition:opacity .3s}
+.toast.show{opacity:1}
+
+@media(max-width:768px){
+  .sidebar{width:100%;position:relative;padding:12px}
+  .sidebar__user{position:static}
+  .main-content{margin-left:0}
+  .sidebar__nav{display:flex;flex-wrap:wrap;gap:4px}
+  .sidebar__nav a{padding:8px 12px;font-size:.75rem}
+}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- ========== LOGIN PAGE ========== -->
+<div class="login-page" id="loginPage">
+  <div class="login-box">
+    <div class="logo"><span style="font-size:1.25rem;font-weight:600;letter-spacing:.05em">ElysianDex</span></div>
+    <h2>Admin Panel</h2>
+    <p class="subtitle">管理员登录 — 查看客户账户和订单数据</p>
+    <p style="font-size:.6875rem;color:#999;margin-bottom:16px;background:#f0f9ff;padding:8px 12px;border-radius:8px">
+      🔰 Super Admin: superadmin@elysiandex.com / super123（可导出Excel）<br>
+      ⚙️ Admin: admin@elysiandex.com / admin123（查看数据）
+    </p>
+    <div class="form-group"><label>Admin Email</label><input type="email" id="loginEmail" placeholder="admin@elysiandex.com" value="admin@elysiandex.com"></div>
+    <div class="form-group"><label>Password</label><input type="password" id="loginPassword" placeholder="Admin password" value="admin123" onkeydown="if(event.key==='Enter')adminLogin()"></div>
+    <button class="btn btn-dark" style="width:100%" onclick="adminLogin()">Login to Admin Panel</button>
+    <p style="text-align:center;margin-top:12px;font-size:.75rem;color:#999"><a href="index.html">← Back to Mall</a></p>
+  </div>
+</div>
+
+<!-- ========== DASHBOARD ========== -->
+<div class="dashboard" id="dashboard">
+  <aside class="sidebar">
+    <div class="sidebar__logo"><span style="font-size:1.25rem;font-weight:600;letter-spacing:.05em">ElysianDex</span></div>
+    <nav class="sidebar__nav">
+      <a href="#" class="active" data-panel="overview" onclick="switchPanel('overview')">📊 Overview</a>
+      <a href="#" data-panel="customers" onclick="switchPanel('customers')">👥 Customers</a>
+      <a href="#" data-panel="orders" onclick="switchPanel('orders')">📦 Orders</a>
+      <a href="#" data-panel="products" onclick="switchPanel('products')">🛍️ Products</a>
+    </nav>
+    <div class="sidebar__user">
+      <div id="sidebarAdminEmail"></div>
+      <button class="btn btn-sm" style="margin-top:8px;color:#fff;background:#333;border:none;width:100%" onclick="adminLogout()">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="top-bar">
+      <h1 id="panelTitle">📊 Overview</h1>
+      <div class="top-bar__actions" id="topBarActions">
+        <button class="btn btn-green" id="btnExportAll" onclick="exportAllData()" style="display:none">📥 Export All Databases</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats" id="statsRow"></div>
+
+    <!-- Panel content -->
+    <div id="panelContent"></div>
+  </div>
+</div>
+
+<script>
+// ======================================================================
+// DATA STORE (shared keys with mall.html)
+// ======================================================================
+// ======================================================================
+// CUSTOMER DATABASE — 与 mall.html 共享 customers.xlsx + localStorage
+// ======================================================================
+var PRELOAD_ACCOUNTS = [
+  { email:'superadmin@elysiandex.com', password:'super123', name:'Super Admin',    company:'Elysiandex', taxId:'', phone:'', role:'super_admin', verified:true, createdAt:'2026-01-01' },
+  { email:'admin@elysiandex.com',      password:'admin123',  name:'Administrator', company:'Elysiandex', taxId:'', phone:'', role:'admin',       verified:true, createdAt:'2026-01-01' },
+];
+
+var currentAdminRole = null;
+
+// 从 customers.xlsx 加载账户
+function loadAccountsFromExcel(callback) {
+  try {
+    fetch('database/customers.xlsx').then(function(resp) {
+      if (!resp.ok) throw new Error('file not found');
+      return resp.arrayBuffer();
+    }).then(function(data) {
+      var wb = XLSX.read(new Uint8Array(data), {type:'array'});
+      var ws = wb.Sheets[wb.SheetNames[0]];
+      var rows = XLSX.utils.sheet_to_json(ws);
+      var accounts = rows.map(function(r){
+        return {
+          email: (r['Email']||r['email']||'').toString().trim().toLowerCase(),
+          password: (r['Password']||r['password']||'').toString().trim(),
+          name: (r['Name']||r['name']||'').toString().trim(),
+          company: (r['Company']||r['company']||'').toString().trim(),
+          taxId: (r['TaxID']||r['taxId']||r['TaxId']||'').toString().trim(),
+          phone: (r['Phone']||r['phone']||'').toString().trim(),
+          role: (r['Role']||r['role']||'customer').toString().trim().toLowerCase(),
+          verified: (r['Verified']||r['verified']||'Yes').toString().trim().toLowerCase()==='yes',
+          createdAt: (r['CreatedAt']||r['createdAt']||'').toString().trim()
+        };
+      }).filter(function(a){ return a.email; });
+      if (accounts.length > 0) {
+        var local = JSON.parse(localStorage.getItem('elysiandex_accounts')||'[]');
+        accounts.forEach(function(excelAcct){
+          if (!local.filter(function(l){return l.email===excelAcct.email;})[0]) local.push(excelAcct);
+        });
+        localStorage.setItem('elysiandex_accounts', JSON.stringify(local));
+      }
+      if (callback) callback();
+    }).catch(function(err) {
+      console.log('[DB] customers.xlsx not loaded, fallback: '+err.message);
+      getAccounts(); // ensure preload exists
+      if (callback) callback();
+    });
+  } catch(e) { if (callback) callback(); }
+}
+
+function getAccounts() {
+  try {
+    var arr = JSON.parse(localStorage.getItem('elysiandex_accounts')||'[]');
+    var changed = false;
+    PRELOAD_ACCOUNTS.forEach(function(pa){
+      if (!arr.filter(function(a){return a.email===pa.email;})[0]) { arr.push(pa); changed = true; }
+    });
+    if (changed) localStorage.setItem('elysiandex_accounts', JSON.stringify(arr));
+    return arr;
+  } catch(e) { return PRELOAD_ACCOUNTS.slice(); }
+}
+function saveAccounts(arr) {
+  PRELOAD_ACCOUNTS.forEach(function(pa){
+    if (!arr.filter(function(a){return a.email===pa.email;})[0]) arr.push(pa);
+  });
+  localStorage.setItem('elysiandex_accounts', JSON.stringify(arr));
+}
+function getOrders() { try{return JSON.parse(localStorage.getItem('elysiandex_orders')||'[]');}catch(e){return[];} }
+function saveOrders(arr) { localStorage.setItem('elysiandex_orders', JSON.stringify(arr)); }
+
+// Get addresses for a specific customer email
+function getAddressesFor(email) { try{return JSON.parse(localStorage.getItem('elysiandex_addresses_'+email)||'[]');}catch(e){return[];} }
+
+function isSuperAdmin() { return currentAdminRole === 'super_admin'; }
+
+var currentPanel = 'overview';
+
+// ===== LOGIN / LOGOUT =====
+function adminLogin() {
+  var email = document.getElementById('loginEmail').value.trim().toLowerCase();
+  var pw = document.getElementById('loginPassword').value;
+
+  // 从客户数据库中查找管理员账户（与 mall.html 共享同一数据库）
+  var accounts = getAccounts();
+  var matched = accounts.filter(function(a){
+    return a.email===email && (a.role==='admin' || a.role==='super_admin');
+  })[0];
+
+  // 账户不存在或不是管理员
+  if (!matched) { showToast('管理员账户不存在 / Admin account not found'); return; }
+
+  // 密码校验
+  if (matched.password !== pw) { showToast('密码错误 / Incorrect password'); return; }
+
+  currentAdminRole = matched.role;
+
+  sessionStorage.setItem('admin_logged_in', '1');
+  sessionStorage.setItem('admin_role', currentAdminRole);
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  document.getElementById('sidebarAdminEmail').textContent = email + (isSuperAdmin()?' [Super Admin]':' [Admin]');
+  switchPanel('overview');
+}
+
+function adminLogout() {
+  sessionStorage.removeItem('admin_logged_in');
+  sessionStorage.removeItem('admin_role');
+  currentAdminRole = null;
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('dashboard').style.display = 'none';
+}
+
+// Check session on load (after Excel DB is loaded)
+(function(){
+  loadAccountsFromExcel(function(){
+    if (sessionStorage.getItem('admin_logged_in')==='1') {
+      currentAdminRole = sessionStorage.getItem('admin_role') || 'admin';
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      var title = isSuperAdmin()?'Super Admin':'Admin';
+      document.getElementById('sidebarAdminEmail').textContent = currentAdminRole==='super_admin'?'superadmin@elysiandex.com [Super Admin]':'admin@elysiandex.com [Admin]';
+      switchPanel('overview');
+    }
+  });
+})();
+
+// ===== ROLE-BASED UI =====
+function updateRoleUI() {
+  var showExport = isSuperAdmin();
+  document.getElementById('btnExportAll').style.display = showExport ? '' : 'none';
+}
+
+// ===== PANEL SWITCH =====
+function switchPanel(panel) {
+  currentPanel = panel;
+  updateRoleUI();
+  // Update nav active
+  document.querySelectorAll('.sidebar__nav a').forEach(function(a){ a.classList.remove('active'); });
+  document.querySelector('[data-panel="'+panel+'"]').classList.add('active');
+  // Render
+  if (panel==='overview') renderOverview();
+  else if (panel==='customers') renderCustomers();
+  else if (panel==='orders') renderOrders();
+  else if (panel==='products') renderProducts();
+}
+
+// ===== OVERVIEW =====
+function renderOverview() {
+  document.getElementById('panelTitle').textContent = '📊 Overview';
+  var accounts = getAccounts().filter(function(a){return a.role!=='admin';});
+  var orders = getOrders();
+  var totalRevenue = orders.reduce(function(s,o){return s+(o.total||0);},0);
+  var pendingOrders = orders.filter(function(o){return o.status==='Pending Payment';}).length;
+
+  document.getElementById('statsRow').innerHTML =
+    '<div class="stat-card"><div class="stat-card__label">Total Customers</div><div class="stat-card__value">'+accounts.length+'</div></div>'+
+    '<div class="stat-card"><div class="stat-card__label">Total Orders</div><div class="stat-card__value">'+orders.length+'</div></div>'+
+    '<div class="stat-card"><div class="stat-card__label">Total Revenue</div><div class="stat-card__value">¥'+(totalRevenue/10000).toFixed(1)+'w</div></div>'+
+    '<div class="stat-card"><div class="stat-card__label">Pending</div><div class="stat-card__value">'+pendingOrders+'</div></div>';
+
+  var recentOrders = orders.slice(0,8);
+  var html = '<div class="panel"><div class="panel__header"><span class="panel__title">Recent Orders</span></div><div class="table-wrapper"><table>'+
+    '<thead><tr><th>Order ID</th><th>Customer</th><th>Company</th><th>Total</th><th>Status</th><th>Date</th></tr></thead><tbody>';
+  recentOrders.forEach(function(o){
+    html += '<tr><td>'+o.id+'</td><td>'+o.customerName+'</td><td>'+(o.company||'—')+'</td><td>¥'+(o.total||0).toLocaleString()+'</td><td><span class="badge '+(o.status==='Pending Payment'?'badge-pending':o.status==='Paid'?'badge-paid':'badge-shipped')+'">'+o.status+'</span></td><td>'+o.date+'</td></tr>';
+  });
+  html += '</tbody></table></div></div>';
+  if (recentOrders.length===0) html += '<div style="text-align:center;padding:40px;color:#999">No orders yet</div>';
+
+  document.getElementById('panelContent').innerHTML = html;
+}
+
+// ===== CUSTOMERS =====
+function renderCustomers() {
+  document.getElementById('panelTitle').textContent = '👥 Customers';
+  var accounts = getAccounts().filter(function(a){return a.role!=='admin';});
+  document.getElementById('statsRow').innerHTML =
+    '<div class="stat-card"><div class="stat-card__label">Total Customers</div><div class="stat-card__value">'+accounts.length+'</div></div>';
+
+  var exportBtnHtml = isSuperAdmin() ? '<button class="btn btn-green btn-sm" onclick="exportCustomersExcel()">📥 Export Customers Excel</button>' : '<span style="font-size:.75rem;color:#999">🔒 Super Admin only</span>';
+  var html = '<div class="panel"><div class="panel__header"><span class="panel__title">All Customer Accounts</span>'+exportBtnHtml+'</div><div class="table-wrapper"><table>'+
+    '<thead><tr><th>Email (ID)</th><th>Name</th><th>Company</th><th>Tax ID</th><th>Phone</th><th>Addresses</th><th>Orders</th><th>Registered</th><th>Actions</th></tr></thead><tbody>';
+  accounts.forEach(function(a){
+    var addrCount = getAddressesFor(a.email).length;
+    var orderCount = getOrders().filter(function(o){return o.customerEmail===a.email;}).length;
+    html += '<tr>'+
+      '<td style="max-width:180px;overflow:hidden;text-overflow:ellipsis" title="'+a.email+'">'+a.email+'</td>'+
+      '<td>'+a.name+'</td><td>'+(a.company||'—')+'</td><td>'+(a.taxId||'—')+'</td><td>'+(a.phone||'—')+'</td>'+
+      '<td>'+addrCount+'</td><td>'+orderCount+'</td><td>'+a.createdAt+'</td>'+
+      '<td><button class="btn btn-sm btn-outline" onclick="viewCustomerDetail(\''+a.email+'\')">Detail</button></td>'+
+    '</tr>';
+  });
+  html += '</tbody></table></div></div>';
+  if (accounts.length===0) html += '<div style="text-align:center;padding:40px;color:#999">No customers registered yet</div>';
+  document.getElementById('panelContent').innerHTML = html;
+}
+
+function viewCustomerDetail(email) {
+  var a = getAccounts().filter(function(f){return f.email===email;})[0];
+  if (!a) return;
+  var addrs = getAddressesFor(email);
+  var orders = getOrders().filter(function(o){return o.customerEmail===email;});
+  var html = '<div class="panel"><div class="panel__header"><span class="panel__title">Customer: '+a.name+'</span><button class="btn btn-sm btn-outline" onclick="switchPanel(\'customers\')">← Back</button></div>'+
+    '<div style="padding:20px;line-height:2;font-size:.875rem">'+
+      '<div><strong>Email:</strong> '+a.email+'</div>'+
+      '<div><strong>Name:</strong> '+a.name+'</div>'+
+      '<div><strong>Company:</strong> '+(a.company||'—')+'</div>'+
+      '<div><strong>Tax ID:</strong> '+(a.taxId||'—')+'</div>'+
+      '<div><strong>Phone:</strong> '+(a.phone||'—')+'</div>'+
+      '<div><strong>Registered:</strong> '+a.createdAt+'</div>'+
+    '</div></div>'+
+    '<div class="panel"><div class="panel__header"><span class="panel__title">Addresses ('+addrs.length+')</span></div><div style="padding:8px 20px 16px">'+
+      (addrs.length>0 ? addrs.map(function(ad){ return '<div style="font-size:.8125rem;padding:8px 0;border-bottom:1px solid #f3f3f3">📍 <strong>'+ad.name+'</strong> · '+ad.phone+'<br>'+ad.province+' '+ad.city+' '+ad.district+' '+ad.detail+'</div>'; }).join('') : '<div style="color:#999;padding:16px">No addresses</div>')+
+    '</div></div>'+
+    '<div class="panel"><div class="panel__header"><span class="panel__title">Orders ('+orders.length+')</span></div><div class="table-wrapper"><table>'+
+      '<thead><tr><th>Order ID</th><th>Items</th><th>Total</th><th>Invoice</th><th>Status</th><th>Date</th></tr></thead><tbody>'+
+      orders.map(function(o){ return '<tr><td>'+o.id+'</td><td>'+o.items+'</td><td>¥'+(o.total||0).toLocaleString()+'</td><td>'+(o.invoiceType||'—')+'</td><td><span class="badge '+(o.status==='Pending Payment'?'badge-pending':'badge-paid')+'">'+o.status+'</span></td><td>'+o.date+'</td></tr>'; }).join('')+
+    '</tbody></table></div></div>';
+  document.getElementById('panelContent').innerHTML = html;
+}
+
+// ===== ORDERS =====
+function renderOrders() {
+  document.getElementById('panelTitle').textContent = '📦 Orders';
+  var orders = getOrders();
+  var totalRevenue = orders.reduce(function(s,o){return s+(o.total||0);},0);
+  var pending = orders.filter(function(o){return o.status==='Pending Payment';}).length;
+  document.getElementById('statsRow').innerHTML =
+    '<div class="stat-card"><div class="stat-card__label">Total Orders</div><div class="stat-card__value">'+orders.length+'</div></div>'+
+    '<div class="stat-card"><div class="stat-card__label">Total Revenue</div><div class="stat-card__value">¥'+(totalRevenue/10000).toFixed(1)+'w</div></div>'+
+    '<div class="stat-card"><div class="stat-card__label">Pending</div><div class="stat-card__value">'+pending+'</div></div>';
+
+  var html = '<div class="panel"><div class="panel__header"><span class="panel__title">All Orders</span>'+
+    '<div style="display:flex;gap:8px">'+
+      (isSuperAdmin() ? '<button class="btn btn-green btn-sm" onclick="exportOrdersExcel()">📥 Export Orders Excel</button>' : '<span style="font-size:.75rem;color:#999">🔒 Super Admin only</span>')+
+      '<select onchange="filterOrders(this.value)" style="padding:6px 12px;border-radius:8px;border:1px solid #ddd;font-size:.75rem"><option value="all">All Status</option><option value="Pending Payment">Pending</option><option value="Paid">Paid</option><option value="Shipped">Shipped</option></select>'+
+    '</div></div><div class="table-wrapper"><table>'+
+    '<thead><tr><th>Order ID</th><th>Customer</th><th>Company</th><th>Items</th><th>Subtotal</th><th>Tax</th><th>Total</th><th>Invoice</th><th>Address</th><th>Status</th><th>Date</th><th>Action</th></tr></thead><tbody id="ordersTbody"></tbody></table></div></div>';
+  document.getElementById('panelContent').innerHTML = html;
+  renderOrderRows('all');
+}
+function filterOrders(status) { renderOrderRows(status); }
+function renderOrderRows(status) {
+  var orders = getOrders();
+  if (status!=='all') orders = orders.filter(function(o){return o.status===status;});
+  var rows = orders.map(function(o){
+    return '<tr>'+
+      '<td style="max-width:100px;overflow:hidden;text-overflow:ellipsis" title="'+o.id+'">'+o.id+'</td>'+
+      '<td>'+o.customerName+'</td><td>'+(o.company||'—')+'</td>'+
+      '<td style="max-width:150px;overflow:hidden;text-overflow:ellipsis" title="'+o.items+'">'+o.items+'</td>'+
+      '<td>¥'+(o.subtotal||0).toLocaleString()+'</td><td>¥'+(o.tax||0).toLocaleString()+'</td>'+
+      '<td>¥'+(o.total||0).toLocaleString()+'</td>'+
+      '<td>'+(o.invoiceType||'—')+'</td>'+
+      '<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis" title="'+o.address+'">'+o.address+'</td>'+
+      '<td><span class="badge '+(o.status==='Pending Payment'?'badge-pending':o.status==='Paid'?'badge-paid':'badge-shipped')+'">'+o.status+'</span></td>'+
+      '<td>'+o.date+'</td>'+
+      '<td><select onchange="updateOrderStatus(\''+o.id+'\',this.value)" style="padding:4px 8px;border-radius:6px;border:1px solid #ddd;font-size:.6875rem"><option value="Pending Payment" '+(o.status==='Pending Payment'?'selected':'')+'>Pending</option><option value="Paid" '+(o.status==='Paid'?'selected':'')+'>Paid</option><option value="Shipped" '+(o.status==='Shipped'?'selected':'')+'>Shipped</option></select></td>'+
+    '</tr>';
+  }).join('');
+  document.getElementById('ordersTbody').innerHTML = rows || '<tr><td colspan="12" style="text-align:center;color:#999;padding:20px">No orders</td></tr>';
+}
+function updateOrderStatus(orderId, newStatus) {
+  var orders = getOrders();
+  var idx = orders.findIndex(function(o){return o.id===orderId;});
+  if (idx>=0) { orders[idx].status = newStatus; saveOrders(orders); showToast('Order '+orderId+' → '+newStatus); }
+}
+
+// ===== PRODUCTS =====
+function renderProducts() {
+  document.getElementById('panelTitle').textContent = '🛍️ Products';
+  document.getElementById('statsRow').innerHTML = '';
+  // Products are hardcoded in mall.html, but we can still show them here
+  var productDefs = [
+    { id:'wave-pro',sku:'ELX-WP-001',name:'Elysiandex Wave Pro',price:128000,stock:99 },
+    { id:'wave-lite',sku:'ELX-WL-001',name:'Elysiandex Wave Lite',price:68000,stock:50 },
+    { id:'north',sku:'ELX-NH-001',name:'Elysiandex North Humanoid',price:580000,stock:10 },
+    { id:'gripper',sku:'ELX-GP-001',name:'Precision Gripper Module',price:22000,stock:200 },
+    { id:'sensor',sku:'ELX-TS-006',name:'Tactile Sensor Array 6-pk',price:15000,stock:300 },
+    { id:'cable',sku:'ELX-CB-KIT',name:'ROS2 Interface Cable Kit',price:3200,stock:500 },
+    { id:'controller',sku:'ELX-EC-001',name:'Embedded Control Board',price:8800,stock:80 },
+    { id:'power',sku:'ELX-PS-048',name:'Industrial Power Supply 48V',price:4500,stock:150 },
+  ];
+  var html = '<div class="panel"><div class="panel__header"><span class="panel__title">Product Catalog</span><span style="font-size:.75rem;color:#999">Products are managed in mall.html source code</span></div><div class="table-wrapper"><table>'+
+    '<thead><tr><th>SKU</th><th>Product Name</th><th>Price</th><th>Stock</th></tr></thead><tbody>'+
+    productDefs.map(function(p){return '<tr><td>'+p.sku+'</td><td>'+p.name+'</td><td>¥'+p.price.toLocaleString()+'</td><td>'+p.stock+'</td></tr>';}).join('')+
+    '</tbody></table></div></div>';
+  document.getElementById('panelContent').innerHTML = html;
+}
+
+// ===== EXPORT EXCEL =====
+function exportCustomersExcel() {
+  if (!isSuperAdmin()) { showToast('仅超级管理员可导出数据'); return; }
+  var accounts = getAccounts().filter(function(a){return a.role!=='admin' && a.role!=='super_admin';});
+  var rows = accounts.map(function(a,i){
+    var addrs = getAddressesFor(a.email);
+    var orderCount = getOrders().filter(function(o){return o.customerEmail===a.email;}).length;
+    return {
+      'ID': 'CUST-'+(i+1).toString().padStart(4,'0'),
+      'Email': a.email,
+      'Name': a.name,
+      'Company': a.company||'',
+      'TaxID': a.taxId||'',
+      'Phone': a.phone||'',
+      'Addresses': addrs.length,
+      'Orders': orderCount,
+      'Registered': a.createdAt,
+      'Verified': a.verified?'Yes':'No'
+    };
+  });
+  if (rows.length===0) rows.push({'Email':'No customers'});
+  var ws = XLSX.utils.json_to_sheet(rows);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Customers');
+  XLSX.writeFile(wb, 'customers_database.xlsx');
+  showToast('Customers Excel downloaded');
+}
+
+function exportOrdersExcel() {
+  if (!isSuperAdmin()) { showToast('仅超级管理员可导出数据'); return; }
+  var orders = getOrders();
+  var rows = orders.map(function(o){
+    return {
+      'OrderID': o.id,
+      'Date': o.date,
+      'CustomerEmail': o.customerEmail||'',
+      'CustomerName': o.customerName||'',
+      'Company': o.company||'',
+      'Items': o.items||'',
+      'Subtotal': o.subtotal||0,
+      'Tax': o.tax||0,
+      'Shipping': o.shipping||0,
+      'Total': o.total||0,
+      'InvoiceType': o.invoiceType||'None',
+      'InvoiceTitle': o.invoiceTitle||'',
+      'InvoiceTaxID': o.invoiceTaxId||'',
+      'InvoiceEmail': o.invoiceEmail||'',
+      'Address': o.address||'',
+      'Status': o.status||''
+    };
+  });
+  if (rows.length===0) rows.push({'OrderID':'No orders'});
+  var ws = XLSX.utils.json_to_sheet(rows);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Orders');
+  XLSX.writeFile(wb, 'orders_database.xlsx');
+  showToast('Orders Excel downloaded');
+}
+
+function exportAllData() {
+  if (!isSuperAdmin()) { showToast('仅超级管理员可导出数据'); return; }
+  exportCustomersExcel();
+  setTimeout(function(){ exportOrdersExcel(); }, 500);
+  showToast('All databases exported');
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+  var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(function(){t.classList.remove('show');},2000);
+}
+</script>
+
+<!-- Footer -->
+<footer style="background:#f9f9f9;color:#111;padding:48px 0 32px;margin-top:80px">
+  <div style="max-width:1300px;margin:0 auto;padding:0 24px;text-align:center">
+    <div style="font-size:1.5rem;font-weight:300;letter-spacing:.1em;margin-bottom:16px;color:#333">Spirit of Dexterity. Reaching the Ultimate Centimeter</div>
+    <div style="font-size:.8125rem;color:#999;margin-bottom:8px">© 2026 Elysiandex. All rights reserved.</div>
+    <div style="font-size:.75rem;color:#bbb">Built with precision for the future of robotic manipulation</div>
+  </div>
+</footer>
+
+</body>
+</html>

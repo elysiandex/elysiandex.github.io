@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About — Elysiandex</title>
+<meta name="description" content="Learn about Elysiandex - building dexterous humanoid robots with human-like, tactile robotic hands.">
+<link rel="icon" href="../assets/logo/LOGO.png">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans',sans-serif;font-weight:300;color:#111;background:#fff;-webkit-font-smoothing:antialiased;line-height:1.6}
+a{color:inherit;text-decoration:none}
+
+.topbar{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid #eee}
+.topbar__inner{max-width:1200px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:60px}
+.topbar__logo img{height:24px}
+.topbar__nav{display:flex;gap:32px;align-items:center}
+.topbar__link{font-size:.875rem;font-weight:500;color:#666;transition:color .2s}
+.topbar__link:hover{color:#000}
+.topbar__link.active{color:#000}
+
+.hero{position:relative;width:100%;height:500px;overflow:hidden;background:#000}
+.hero img{width:100%;height:100%;object-fit:cover;opacity:.6}
+.hero__overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.3),rgba(0,0,0,.6))}
+.hero__content{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center}
+.hero__title{font-size:3rem;font-weight:300;color:#fff;letter-spacing:.1em;margin-bottom:16px}
+.hero__subtitle{font-size:1.25rem;color:rgba(255,255,255,.85);max-width:600px;margin:0 auto}
+
+.page{max-width:1000px;margin:0 auto;padding:80px 24px}
+
+.section{margin-bottom:80px}
+.section__title{font-size:2rem;font-weight:600;margin-bottom:24px;letter-spacing:-.02em}
+.section__desc{font-size:1.125rem;color:#555;line-height:1.8;margin-bottom:32px}
+
+.features{display:grid;grid-template-columns:1fr;gap:32px}
+@media(min-width:768px){.features{grid-template-columns:1fr 1fr}}
+.feature{background:#f9f9f9;border-radius:16px;padding:32px}
+.feature__icon{font-size:2.5rem;margin-bottom:16px}
+.feature__title{font-size:1.25rem;font-weight:600;margin-bottom:12px}
+.feature__desc{font-size:.9375rem;color:#666;line-height:1.7}
+
+.stats{display:grid;grid-template-columns:1fr;gap:24px;text-align:center;margin:48px 0}
+@media(min-width:768px){.stats{grid-template-columns:repeat(4,1fr)}}
+.stat{padding:24px}
+.stat__number{font-size:2.5rem;font-weight:700;color:#000;margin-bottom:8px}
+.stat__label{font-size:.875rem;color:#999}
+
+.team{display:grid;grid-template-columns:1fr;gap:32px}
+@media(min-width:768px){.team{grid-template-columns:1fr 1fr 1fr}}
+.team-member{text-align:center}
+.team-member__avatar{width:120px;height:120px;border-radius:50%;background:#f3f3f3;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:2.5rem}
+.team-member__name{font-size:1.125rem;font-weight:600;margin-bottom:4px}
+.team-member__role{font-size:.875rem;color:#999}
+
+.cta{text-align:center;background:#f9f9f9;border-radius:20px;padding:64px 32px}
+.cta__title{font-size:2rem;font-weight:600;margin-bottom:16px}
+.cta__desc{font-size:1.125rem;color:#666;margin-bottom:32px;max-width:500px;margin-left:auto;margin-right:auto}
+.cta__btn{display:inline-flex;align-items:center;gap:8px;padding:14px 32px;border-radius:999px;background:#000;color:#fff;font-size:.9375rem;font-weight:500;transition:background .2s}
+.cta__btn:hover{background:#333}
+
+.footer{background:#f9f9f9;color:#111;padding:48px 0 32px;margin-top:80px}
+.footer__inner{max-width:1200px;margin:0 auto;padding:0 24px;text-align:center}
+.footer__slogan{font-size:1.5rem;font-weight:300;letter-spacing:.1em;margin-bottom:16px;color:#333}
+.footer__copy{font-size:.8125rem;color:#999;margin-bottom:8px}
+.footer__note{font-size:.75rem;color:#bbb}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar__inner">
+    <a href="../index.html"><span style="font-size:1.25rem;font-weight:600;letter-spacing:.05em">ElysianDex</span></a>
+    <nav class="topbar__nav">
+      <a href="../index.html" class="topbar__link">Home</a>
+      <a href="../mall/index.html" class="topbar__link">Mall</a>
+      <a href="../research/index.html" class="topbar__link">Research</a>
+      <a href="../developer/developer-docs.html" class="topbar__link">Developer</a>
+      <a href="index.html" class="topbar__link active">About</a>
+    </nav>
+  </div>
+</header>
+
+<!-- Hero Section -->
+<div class="hero">
+  <img src="../assets/images/background1.png" alt="Elysiandex Robot">
+  <div class="hero__overlay"></div>
+  <div class="hero__content">
+    <div>
+      <h1 class="hero__title">About Elysiandex</h1>
+      <p class="hero__subtitle">Pioneering the future of dexterous robotic manipulation</p>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- Mission Section -->
+  <section class="section">
+    <h2 class="section__title">Our Mission</h2>
+    <p class="section__desc">
+      Elysiandex builds dexterous humanoid robots with human-like, tactile robotic hands. Our platform integrates high-dynamic whole-body control with human-level dexterous manipulation skills for autonomous operation in real-world settings.
+    </p>
+    <p class="section__desc">
+      We believe that the future of robotics lies in the ability to interact with the world as naturally as humans do. Our technology bridges the gap between robotic precision and human dexterity, enabling machines to perform complex manipulation tasks with unprecedented accuracy and sensitivity.
+    </p>
+  </section>
+
+  <!-- Stats Section -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat__number">22</div>
+      <div class="stat__label">Degrees of Freedom</div>
+    </div>
+    <div class="stat">
+      <div class="stat__number">0.005N</div>
+      <div class="stat__label">Force Resolution</div>
+    </div>
+    <div class="stat">
+      <div class="stat__number">15:1</div>
+      <div class="stat__label">Gear Ratio</div>
+    </div>
+    <div class="stat">
+      <div class="stat__number">1000+</div>
+      <div class="stat__label">Tactile Sensors</div>
+    </div>
+  </div>
+
+  <!-- Technology Section -->
+  <section class="section">
+    <h2 class="section__title">Our Technology</h2>
+    <p class="section__desc">
+      At the heart of our innovation is the Wave robotic hand - a 22 degrees of freedom, dexterous robotic hand engineered to match the human hand in size, structure, and tactile sensitivity. Combined with our advanced Vision-Tactile-Language-Action (VTLA) architecture, we enable anthropomorphic dexterous manipulation with reflex-level intelligence.
+    </p>
+
+    <div class="features">
+      <div class="feature">
+        <div class="feature__icon">🤖</div>
+        <h3 class="feature__title">Human-Like Dexterity</h3>
+        <p class="feature__desc">Our Wave hand replicates the human hand's 22 degrees of freedom, enabling natural and precise manipulation of objects in complex environments.</p>
+      </div>
+      <div class="feature">
+        <div class="feature__icon">🎯</div>
+        <h3 class="feature__title">Tactile Sensitivity</h3>
+        <p class="feature__desc">With over 1000 tactile sensors and 0.005N force resolution, our robots can feel and manipulate objects with human-like sensitivity.</p>
+      </div>
+      <div class="feature">
+        <div class="feature__icon">⚡</div>
+        <h3 class="feature__title">Quasi-Direct Drive</h3>
+        <p class="feature__desc">Our innovative 15:1 gear ratio provides the perfect balance of torque and transparency, enabling backdrivable and force-controlled manipulation.</p>
+      </div>
+      <div class="feature">
+        <div class="feature__icon">🧠</div>
+        <h3 class="feature__title">VTLA Architecture</h3>
+        <p class="feature__desc">Vision-Tactile-Language-Action model integrates visual perception, tactile feedback, and language understanding for intelligent manipulation.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Applications Section -->
+  <section class="section">
+    <h2 class="section__title">Applications</h2>
+    <p class="section__desc">
+      Our technology enables a wide range of applications across industries:
+    </p>
+    <div class="features">
+      <div class="feature">
+        <div class="feature__icon">🔬</div>
+        <h3 class="feature__title">Research & Development</h3>
+        <p class="feature__desc">Trusted by leading robotics labs globally for embodied AI research, sim-to-real transfer, and dexterous manipulation studies.</p>
+      </div>
+      <div class="feature">
+        <div class="feature__icon">🏭</div>
+        <h3 class="feature__title">Industrial Automation</h3>
+        <p class="feature__desc">Enabling flexible automation for complex assembly, quality inspection, and material handling tasks that require human-like dexterity.</p>
+      </div>
+      <div class="feature">
+        <div class="feature__icon">🏥</div>
+        <h3 class="feature__title">Healthcare & Assistive</h3>
+        <p class="feature__desc">Supporting surgical robotics, rehabilitation systems, and assistive devices that require precise and gentle manipulation.</p>
+      </div>
+      <div class="feature">
+        <div class="feature__icon">🏠</div>
+        <h3 class="feature__title">Service Robotics</h3>
+        <p class="feature__desc">Enabling robots to perform household tasks, food preparation, and caregiving activities with human-like dexterity.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta">
+    <h2 class="cta__title">Ready to Get Started?</h2>
+    <p class="cta__desc">Join the future of robotic manipulation with Elysiandex technology</p>
+    <a href="../mall/index.html" class="cta__btn">Explore Products <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 6h10M11 6L6 1m5 5l-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+  </section>
+
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="footer__inner">
+    <div class="footer__slogan">Spirit of Dexterity. Reaching the Ultimate Centimeter</div>
+    <div class="footer__copy">© 2026 Elysiandex. All rights reserved.</div>
+    <div class="footer__note">Built with precision for the future of robotic manipulation</div>
+  </div>
+</footer>
+
+</body>
+</html>

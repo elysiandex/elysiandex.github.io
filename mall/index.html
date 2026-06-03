@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mall — Elysiandex</title>
+<link rel="icon" href="../assets/logo/LOGO.png">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+/* ========== RESET ========== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans',sans-serif;font-weight:400;color:#111;background:#f5f5f7;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+input,select,textarea,button{font-family:inherit}
+:root{--radius:12px}
+
+/* ========== TOP BAR ========== */
+.topbar{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-index:50}
+.topbar__inner{max-width:1300px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:60px}
+.topbar__logo img{height:28px}
+.topbar__actions{display:flex;align-items:center;gap:12px}
+.topbar__cart-btn{position:relative;padding:8px 16px;border-radius:999px;border:1px solid #ddd;background:#fff;cursor:pointer;font-size:.8125rem;font-weight:500;display:flex;align-items:center;gap:6px;transition:all .2s}
+.topbar__cart-btn:hover{border-color:#000}
+.topbar__cart-badge{background:#e53e3e;color:#fff;font-size:.6875rem;padding:1px 6px;border-radius:999px;min-width:18px;text-align:center}
+.topbar__user-btn{padding:8px 16px;border-radius:999px;border:none;font-size:.8125rem;font-weight:500;cursor:pointer;transition:all .2s}
+.topbar__user-btn.logged-out{background:#000;color:#fff}
+.topbar__user-btn.logged-out:hover{background:#333}
+.topbar__user-btn.logged-in{background:#f3f3f3;color:#111;display:flex;align-items:center;gap:8px}
+.topbar__user-btn.logged-in:hover{background:#e5e5e5}
+.topbar__user-email{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.topbar__logout{font-size:.6875rem;color:#999;cursor:pointer;padding:4px 10px;border-radius:999px;border:1px solid #ddd;background:#fff}
+.topbar__logout:hover{color:#e53e3e;border-color:#e53e3e}
+
+/* User Dropdown */
+.user-dropdown{position:relative}
+.user-dropdown__menu{position:absolute;top:calc(100% + 8px);right:0;background:#fff;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.12);border:1px solid #eee;min-width:200px;overflow:hidden;opacity:0;visibility:hidden;transform:translateY(-4px);transition:all .2s;z-index:51}
+.user-dropdown__menu.open{opacity:1;visibility:visible;transform:translateY(0)}
+.user-dropdown__item{display:flex;align-items:center;gap:10px;width:100%;padding:12px 16px;border:none;background:none;font-size:.8125rem;font-weight:500;cursor:pointer;text-align:left;transition:background .15s;font-family:inherit;color:#111}
+.user-dropdown__item:hover{background:#f5f5f7}
+.user-dropdown__item.danger{color:#e53e3e}
+.user-dropdown__item.danger:hover{background:#fef2f2}
+.user-dropdown__divider{border-top:1px solid #eee;margin:4px 0}
+.user-dropdown__icon{font-size:1rem;width:20px;text-align:center;flex-shrink:0}
+
+/* QR Code */
+.qr-container{text-align:center;padding:16px;background:#fff;border-radius:12px}
+.qr-container img{width:180px;height:180px;margin:0 auto;border:1px solid #eee;border-radius:8px}
+.qr-container .qr-hint{font-size:.75rem;color:#999;margin-top:8px}
+
+/* ========== MAIN ========== */
+.main{max-width:1300px;margin:0 auto;padding:32px 24px 80px}
+.product-grid{display:grid;grid-template-columns:1fr;gap:24px}
+@media(min-width:600px){.product-grid{grid-template-columns:1fr 1fr}}
+@media(min-width:1024px){.product-grid{grid-template-columns:1fr 1fr 1fr}}
+.cat-filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px}
+.cat-filter button{padding:8px 18px;border-radius:999px;border:1px solid #ddd;background:#fff;cursor:pointer;font-size:.8125rem;font-weight:500;transition:all .2s}
+.cat-filter button:hover,.cat-filter button.active{border-color:#000;background:#000;color:#fff}
+
+/* ========== PRODUCT CARD ========== */
+.product-card{background:#fff;border-radius:var(--radius);overflow:hidden;border:1px solid #eee;transition:all .3s;display:flex;flex-direction:column}
+.product-card:hover{box-shadow:0 8px 30px rgba(0,0,0,.08);transform:translateY(-2px)}
+.product-card__img{aspect-ratio:4/3;background:#f5f5f7;overflow:hidden}
+.product-card__img img{width:100%;height:100%;object-fit:cover;transition:transform .5s}
+.product-card:hover .product-card__img img{transform:scale(1.05)}
+.product-card__body{padding:16px;display:flex;flex-direction:column;flex:1}
+.product-card__sku{font-size:.6875rem;color:#999;margin-bottom:4px}
+.product-card__name{font-weight:600;font-size:.9375rem;margin-bottom:4px}
+.product-card__desc{font-size:.75rem;color:#777;margin-bottom:12px;flex:1}
+.product-card__footer{display:flex;align-items:center;justify-content:space-between}
+.product-card__price{font-weight:700;font-size:1.125rem}
+.product-card__add{padding:8px 16px;border-radius:999px;border:none;background:#000;color:#fff;font-size:.75rem;font-weight:600;cursor:pointer;transition:all .2s}
+.product-card__add:hover{background:#333}
+.product-card__qty{display:flex;align-items:center;gap:6px}
+.product-card__qty button{width:26px;height:26px;border-radius:50%;border:1px solid #ddd;background:#fff;cursor:pointer;font-weight:500;font-size:.875rem;display:flex;align-items:center;justify-content:center}
+
+/* ========== CART PANEL ========== */
+.cart-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:80;opacity:0;visibility:hidden;transition:all .3s}
+.cart-overlay.open{opacity:1;visibility:visible}
+.cart-panel{position:fixed;top:0;right:0;bottom:0;width:100%;max-width:440px;background:#fff;z-index:81;transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column}
+.cart-panel.open{transform:translateX(0)}
+.cart-panel__header{padding:20px 24px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between}
+.cart-panel__title{font-weight:700;font-size:1.125rem}
+.cart-panel__close{width:36px;height:36px;border-radius:50%;border:none;background:#f3f3f3;cursor:pointer;font-size:1.25rem;display:flex;align-items:center;justify-content:center}
+.cart-panel__body{flex:1;overflow-y:auto;padding:16px 24px}
+.cart-panel__empty{text-align:center;padding:60px 20px;color:#999}
+.cart-mini-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #f3f3f3}
+.cart-mini-item__img{width:60px;height:60px;border-radius:8px;background:#f5f5f7;overflow:hidden;flex-shrink:0}
+.cart-mini-item__img img{width:100%;height:100%;object-fit:cover}
+.cart-mini-item__info{flex:1;min-width:0}
+.cart-mini-item__name{font-weight:600;font-size:.8125rem;margin-bottom:2px}
+.cart-mini-item__price{font-size:.75rem;color:#666}
+.cart-mini-item__row{display:flex;align-items:center;justify-content:space-between;margin-top:4px}
+.cart-mini-item__remove{color:#999;font-size:.6875rem;cursor:pointer;background:none;border:none}
+.cart-mini-item__remove:hover{color:#e53e3e}
+.cart-panel__footer{padding:16px 24px;border-top:1px solid #eee}
+.cart-panel__total{display:flex;justify-content:space-between;font-weight:700;font-size:1.125rem;margin-bottom:12px}
+.cart-panel__checkout{width:100%;padding:14px;border-radius:var(--radius);border:none;background:#000;color:#fff;font-size:1rem;font-weight:600;cursor:pointer;transition:all .2s}
+.cart-panel__checkout:hover{background:#222}
+.cart-panel__checkout:disabled{background:#ccc;cursor:not-allowed}
+
+/* ========== MODALS (login/register/wizard) ========== */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:90;opacity:0;visibility:hidden;transition:all .3s;display:flex;align-items:center;justify-content:center}
+.modal-overlay.open{opacity:1;visibility:visible}
+.modal{background:#fff;border-radius:20px;width:90%;max-width:460px;max-height:85vh;overflow-y:auto;padding:32px 28px}
+.modal h3{font-size:1.25rem;font-weight:700;margin-bottom:6px}
+.modal .subtitle{font-size:.8125rem;color:#999;margin-bottom:20px}
+.modal-close{position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;border:none;background:#f3f3f3;cursor:pointer;font-size:1rem}
+
+/* ========== FORM ========== */
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:.75rem;font-weight:600;color:#555;margin-bottom:4px}
+.form-group label .req{color:#e53e3e}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 14px;border:1px solid #e0e0e0;border-radius:8px;font-size:.8125rem;outline:none;transition:border .2s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:#000}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-hint{font-size:.6875rem;color:#999;margin-top:6px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 24px;border-radius:999px;border:none;font-size:.875rem;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit}
+.btn-primary{background:#000;color:#fff;width:100%}
+.btn-primary:hover{background:#222}
+.btn-primary:disabled{background:#ccc;cursor:not-allowed}
+.btn-outline{background:#fff;color:#666;border:1px solid #ddd;width:100%}
+.btn-outline:hover{background:#f5f5f7}
+.btn-sm{padding:8px 16px;font-size:.75rem}
+.btn-danger{color:#e53e3e;background:none;border:1px solid #e53e3e;padding:6px 14px;font-size:.6875rem;border-radius:999px;cursor:pointer}
+
+/* ========== WIZARD ========== */
+.wizard-modal{max-width:640px}
+.wizard-step{display:none}
+.wizard-step.active{display:block}
+.wizard-dots{display:flex;gap:6px;margin-bottom:16px}
+.wizard-dot{width:8px;height:8px;border-radius:50%;background:#ddd;transition:all .3s}
+.wizard-dot.active{background:#000;width:24px;border-radius:4px}
+.wizard-dot.done{background:#10b981}
+.wizard-footer{display:flex;justify-content:space-between;gap:12px;margin-top:24px;padding-top:16px;border-top:1px solid #eee}
+.choice-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+@media(max-width:480px){.choice-row{grid-template-columns:1fr}}
+.choice-card{padding:24px 16px;border:2px solid #eee;border-radius:var(--radius);text-align:center;cursor:pointer;transition:all .2s}
+.choice-card:hover{border-color:#ccc}
+.choice-card.selected{border-color:#000;background:#fafafa}
+.choice-card__icon{font-size:2rem;margin-bottom:8px}
+.choice-card__title{font-weight:600;font-size:.9375rem;margin-bottom:4px}
+.choice-card__desc{font-size:.75rem;color:#999}
+.address-card{border:2px solid #eee;border-radius:var(--radius);padding:16px;cursor:pointer;transition:all .2s;margin-bottom:8px}
+.address-card:hover,.address-card.selected{border-color:#000}
+.address-card__name{font-weight:600}
+.address-card__detail{font-size:.8125rem;color:#666}
+.order-summary-row{display:flex;justify-content:space-between;padding:6px 0;font-size:.9375rem}
+.order-summary-row.total{border-top:2px solid #eee;margin-top:8px;padding-top:12px;font-weight:700;font-size:1.125rem}
+
+/* Toast */
+.toast{position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:12px 24px;border-radius:10px;font-size:.875rem;font-weight:500;z-index:200;opacity:0;pointer-events:none;transition:opacity .3s}
+.toast.show{opacity:1}
+
+/* account info bar */
+.login-required-bar{background:#fff3cd;border:1px solid #ffc107;border-radius:12px;padding:14px 20px;text-align:center;margin-bottom:20px;font-size:.875rem}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- ========== TOP BAR ========== -->
+<header class="topbar">
+  <div class="topbar__inner">
+    <a href="../index.html"><span style="font-size:1.25rem;font-weight:600;letter-spacing:.05em">ElysianDex</span></a>
+    <div class="topbar__actions">
+      <button class="topbar__cart-btn" id="cartBtn">🛒 Cart <span class="topbar__cart-badge" id="cartBadge">0</span></button>
+      <div class="user-dropdown" id="userDropdown">
+        <button class="topbar__user-btn logged-out" id="userBtn">👤 Login / Register</button>
+        <div class="user-dropdown__menu" id="userMenu"></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ========== MAIN ========== -->
+<div class="main">
+  <div class="cat-filter" id="catFilter"></div>
+  <div class="product-grid" id="productGrid"></div>
+</div>
+
+<!-- ========== CART PANEL ========== -->
+<div class="cart-overlay" id="cartOverlay"></div>
+<div class="cart-panel" id="cartPanel">
+  <div class="cart-panel__header">
+    <span class="cart-panel__title">🛒 Shopping Cart</span>
+    <button class="cart-panel__close" id="cartClose">✕</button>
+  </div>
+  <div class="cart-panel__body" id="cartPanelBody"></div>
+  <div class="cart-panel__footer">
+    <div class="cart-panel__total"><span>Total</span><span id="cartPanelTotal">¥0</span></div>
+    <button class="cart-panel__checkout" id="cartCheckoutBtn" disabled>Proceed to Checkout</button>
+  </div>
+</div>
+
+<!-- ========== AUTH MODAL (login/register) ========== -->
+<div class="modal-overlay" id="authOverlay">
+  <div class="modal" id="authPanel" style="position:relative">
+    <button class="modal-close" onclick="closeAuth()" style="position:absolute;top:12px;right:12px">✕</button>
+    <div id="authContent"></div>
+  </div>
+</div>
+
+<!-- ========== CHECKOUT WIZARD ========== -->
+<div class="modal-overlay" id="wizardOverlay">
+  <div class="modal wizard-modal" id="wizard" style="max-width:640px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <h3 id="wizardTitle" style="margin:0">Checkout</h3>
+      <button class="modal-close" style="position:static" onclick="closeWizard()">✕</button>
+    </div>
+    <div class="wizard-dots" id="wizardDots"></div>
+    <div id="wizardBody"></div>
+    <div class="wizard-footer" id="wizardFooter"></div>
+  </div>
+</div>
+
+
+<script>
+// ======================================================================
+// DATA STORE — Excel-compatible, localStorage-backed
+// ======================================================================
+var DB_PRODUCTS = [
+  { id:'wave-pro',  cat:'robot', name:'Elysiandex Wave Pro',         sku:'ELX-WP-001', price:128000, stock:99, img:'products/touch_general.png',       desc:'22-DoF dexterous robotic hand, full tactile sensing, ROS2-ready' },
+  { id:'wave-lite', cat:'robot', name:'Elysiandex Wave Lite',        sku:'ELX-WL-001', price: 68000, stock:50, img:'products/image_general.png',       desc:'14-DoF compact robotic hand, ideal for research labs' },
+  { id:'north',     cat:'robot', name:'Elysiandex North Humanoid',   sku:'ELX-NH-001', price:580000, stock:10, img:'products/background.png',          desc:'Full humanoid robot with integrated Wave hands, whole-body control' },
+  { id:'gripper',   cat:'part',  name:'Precision Gripper Module',    sku:'ELX-GP-001', price: 22000, stock:200,img:'products/functionl_demo.png',     desc:'Modular gripper attachment, IP54-rated, 5kg payload' },
+  { id:'sensor',    cat:'part',  name:'Tactile Sensor Array 6-pk',   sku:'ELX-TS-006', price: 15000, stock:300,img:'products/background2.png',         desc:'High-density tactile sensor patches, 3mm pitch, I2C interface' },
+  { id:'cable',     cat:'acc',   name:'ROS2 Interface Cable Kit',    sku:'ELX-CB-KIT', price:  3200, stock:500,img:'products/functionl_demo.png',     desc:'Complete cable set for ROS2 integration, 5m shielded' },
+  { id:'controller',cat:'acc',   name:'Embedded Control Board',      sku:'ELX-EC-001', price:  8800, stock:80, img:'products/background.png',          desc:'ARM Cortex-M7 real-time controller, EtherCAT master' },
+  { id:'power',     cat:'acc',   name:'Industrial Power Supply 48V', sku:'ELX-PS-048', price:  4500, stock:150,img:'products/background2.png',         desc:'48V/20A industrial PSU with overload protection' },
+];
+var DB_CATEGORIES = [
+  { id:'all', name:'All Products' },
+  { id:'robot', name:'🤖 Robots' },
+  { id:'part', name:'🔧 Parts & Modules' },
+  { id:'acc', name:'⚡ Accessories' },
+];
+
+// ======================================================================
+// CUSTOMER DATABASE — 从 customers.xlsx 加载，localStorage 持久化
+// 客户数据库 — 登录时校验，不在数据库中提示 "账户不存在"
+// 文件位置: officialWebSite/customers.xlsx
+// ======================================================================
+
+// 预置账户（初次使用、Excel 加载失败时的兜底数据）
+var PRELOAD_ACCOUNTS = [
+  { email:'superadmin@elysiandex.com', password:'super123', name:'Super Admin',    company:'Elysiandex', taxId:'', phone:'', role:'super_admin', verified:true, createdAt:'2026-01-01' },
+  { email:'admin@elysiandex.com',      password:'admin123',  name:'Administrator', company:'Elysiandex', taxId:'', phone:'', role:'admin',       verified:true, createdAt:'2026-01-01' },
+];
+
+// 从 customers.xlsx 加载账户（如果文件存在）
+function loadAccountsFromExcel(callback) {
+  try {
+    // 尝试通过 fetch 加载同目录下的 customers.xlsx
+    fetch('database/customers.xlsx').then(function(resp) {
+      if (!resp.ok) throw new Error('file not found');
+      return resp.arrayBuffer();
+    }).then(function(data) {
+      var wb = XLSX.read(new Uint8Array(data), {type:'array'});
+      var ws = wb.Sheets[wb.SheetNames[0]];
+      var rows = XLSX.utils.sheet_to_json(ws);
+      // 映射 Excel 列名到内部字段
+      var accounts = rows.map(function(r){
+        return {
+          email: (r['Email']||r['email']||'').toString().trim().toLowerCase(),
+          password: (r['Password']||r['password']||'').toString().trim(),
+          name: (r['Name']||r['name']||'').toString().trim(),
+          company: (r['Company']||r['company']||'').toString().trim(),
+          taxId: (r['TaxID']||r['taxId']||r['TaxId']||'').toString().trim(),
+          phone: (r['Phone']||r['phone']||'').toString().trim(),
+          role: (r['Role']||r['role']||'customer').toString().trim().toLowerCase(),
+          verified: (r['Verified']||r['verified']||'Yes').toString().trim().toLowerCase()==='yes',
+          createdAt: (r['CreatedAt']||r['createdAt']||'').toString().trim()
+        };
+      }).filter(function(a){ return a.email; });
+      if (accounts.length > 0) {
+        // 合并到 localStorage：Excel 中的新账户追加，已有账户保留 localStorage 版本（因为密码可能已更新）
+        var local = JSON.parse(localStorage.getItem('elysiandex_accounts')||'[]');
+        accounts.forEach(function(excelAcct){
+          if (!local.filter(function(l){return l.email===excelAcct.email;})[0]) {
+            local.push(excelAcct);
+          }
+        });
+        localStorage.setItem('elysiandex_accounts', JSON.stringify(local));
+        console.log('[DB] Loaded '+accounts.length+' accounts from customers.xlsx');
+      }
+      if (callback) callback();
+    }).catch(function(err) {
+      console.log('[DB] customers.xlsx not loaded, using localStorage/preload: '+err.message);
+      // Excel 加载失败，确保预置账户存在
+      getAccounts();
+      if (callback) callback();
+    });
+  } catch(e) {
+    console.log('[DB] Init error: '+e.message);
+    if (callback) callback();
+  }
+}
+
+function getAccounts() {
+  try {
+    var arr = JSON.parse(localStorage.getItem('elysiandex_accounts')||'[]');
+    var changed = false;
+    PRELOAD_ACCOUNTS.forEach(function(pa){
+      if (!arr.filter(function(a){return a.email===pa.email;})[0]) {
+        arr.push(pa); changed = true;
+      }
+    });
+    if (changed) localStorage.setItem('elysiandex_accounts', JSON.stringify(arr));
+    return arr;
+  } catch(e) { return PRELOAD_ACCOUNTS.slice(); }
+}
+function saveAccounts(arr) {
+  PRELOAD_ACCOUNTS.forEach(function(pa){
+    if (!arr.filter(function(a){return a.email===pa.email;})[0]) arr.push(pa);
+  });
+  localStorage.setItem('elysiandex_accounts', JSON.stringify(arr));
+}
+
+// Password helper — simple hash for comparison (NOT for production crypto, demo only)
+function hashPW(pw) { var h=0; for(var i=0;i<pw.length;i++){h=((h<<5)-h)+pw.charCodeAt(i);h|=0;} return 'pw_'+Math.abs(h).toString(36); }
+
+function getCurrentEmail() { return localStorage.getItem('elysiandex_current_user')||null; }
+function setCurrentEmail(email) { localStorage.setItem('elysiandex_current_user', email||''); }
+function isLoggedIn() { return !!getCurrentEmail(); }
+function getCurrentAccount() {
+  var email = getCurrentEmail(); if (!email) return null;
+  return getAccounts().filter(function(a){return a.email===email;})[0] || null;
+}
+function isAdminUser() { var a=getCurrentAccount(); return a&&(a.role==='admin'||a.role==='super_admin'); }
+
+// 生成/下载 Excel 数据库文件
+function downloadCustomerExcel() {
+  var accounts = getAccounts();
+  var rows = accounts.map(function(a,i){
+    return {
+      'Email': a.email,
+      'Name': a.name,
+      'Password': a.password,
+      'Company': a.company||'',
+      'TaxID': a.taxId||'',
+      'Phone': a.phone||'',
+      'Role': a.role||'customer',
+      'Verified': a.verified?'Yes':'No',
+      'CreatedAt': a.createdAt||''
+    };
+  });
+  var ws = XLSX.utils.json_to_sheet(rows);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Customers');
+  XLSX.writeFile(wb, 'customers.xlsx');
+}
+
+// Cart keyed by user email
+function getCartKey() { var e=getCurrentEmail(); return e?'elysiandex_cart_'+e:'elysiandex_cart_guest'; }
+function getCart() { try{return JSON.parse(localStorage.getItem(getCartKey())||'[]');}catch(e){return[];} }
+function saveCart(c) { localStorage.setItem(getCartKey(), JSON.stringify(c)); }
+function cartCount() { return getCart().reduce(function(s,i){return s+i.qty;},0); }
+function cartSubtotal() {
+  return getCart().reduce(function(s,i){ var p=findProduct(i.productId); return s+(p?p.price*i.qty:0); },0);
+}
+
+// Addresses & orders keyed by email
+function getAddressesKey() { var e=getCurrentEmail(); return e?'elysiandex_addresses_'+e:'elysiandex_addresses_guest'; }
+function getAddresses() { try{return JSON.parse(localStorage.getItem(getAddressesKey())||'[]');}catch(e){return[];} }
+function saveAddresses(arr) { localStorage.setItem(getAddressesKey(), JSON.stringify(arr)); }
+function getOrders() { try{return JSON.parse(localStorage.getItem('elysiandex_orders')||'[]');}catch(e){return[];} }
+function saveOrders(arr) { localStorage.setItem('elysiandex_orders', JSON.stringify(arr)); }
+
+function findProduct(id) { return DB_PRODUCTS.filter(function(p){return p.id===id;})[0]; }
+
+// ===== LOGIN/REGISTER BINDING — auto-bind historical data =====
+function bindHistoryToAccount(email) {
+  // Bind any orders made with guest cart matching this email's company/taxId
+  var account = getAccounts().filter(function(a){return a.email===email;})[0];
+  if (!account) return;
+  var orders = getOrders();
+  var changed = false;
+  orders.forEach(function(o){
+    if (!o.customerEmail && o.invoiceEmail === email) { o.customerEmail = email; changed = true; }
+  });
+  if (changed) saveOrders(orders);
+}
+
+// ======================================================================
+// AUTH UI
+// ======================================================================
+var authMode = 'login'; // 'login' | 'register' | 'verify'
+
+function openAuth(mode) {
+  authMode = mode || 'login';
+  document.getElementById('authOverlay').classList.add('open');
+  renderAuth();
+}
+function closeAuth() { document.getElementById('authOverlay').classList.remove('open'); _pendingReg = null; authMode = 'login'; }
+document.getElementById('authOverlay').addEventListener('click',function(e){if(e.target===this)closeAuth();});
+
+function renderAuth() {
+  var html = '';
+  if (authMode === 'login') {
+    html = '<h3>Login</h3><p class="subtitle">登录您的账户以继续购物</p>'+
+      '<div class="form-group"><label>Email <span class="req">*</span></label><input type="email" id="auth_email" placeholder="your@email.com"></div>'+
+      '<div class="form-group"><label>Password <span class="req">*</span></label><input type="password" id="auth_password" placeholder="密码" onkeydown="if(event.key===\'Enter\')loginSubmit()"></div>'+
+      '<button class="btn btn-primary" onclick="loginSubmit()">Login</button>'+
+      '<p style="text-align:center;margin-top:12px;font-size:.8125rem;color:#999">没有账户？<a href="#" style="color:#000;font-weight:600" onclick="authMode=\'register\';renderAuth();return false">Register →</a></p>';
+  } else if (authMode === 'register') {
+    html = '<h3>Register</h3><p class="subtitle">创建账户，邮箱将作为唯一标识</p>'+
+      '<div class="form-group"><label>Email <span class="req">*</span></label><input type="email" id="auth_email" placeholder="your@email.com"><p class="form-hint">邮箱将作为您的唯一账户ID</p></div>'+
+      '<div class="form-group"><label>姓名 / Name <span class="req">*</span></label><input type="text" id="auth_name" placeholder="您的姓名"></div>'+
+      '<div class="form-group"><label>公司 / Company</label><input type="text" id="auth_company" placeholder="公司全称（开票用）"></div>'+
+      '<div class="form-group"><label>税号 / Tax ID</label><input type="text" id="auth_taxId" placeholder="统一社会信用代码"></div>'+
+      '<div class="form-row">'+
+        '<div class="form-group"><label>电话 / Phone</label><input type="tel" id="auth_phone" placeholder="手机号"></div>'+
+        '<div class="form-group"><label>Password <span class="req">*</span></label><input type="password" id="auth_password" placeholder="设置密码"></div>'+
+      '</div>'+
+      '<button class="btn btn-primary" onclick="registerSubmit()">Send Verification Code</button>'+
+      '<p style="text-align:center;margin-top:12px;font-size:.8125rem;color:#999">已有账户？<a href="#" style="color:#000;font-weight:600" onclick="authMode=\'login\';renderAuth();return false">Login →</a></p>';
+  } else if (authMode === 'verify') {
+    html = '<h3>📧 Verify Email</h3><p class="subtitle">验证码已发送至 <strong>'+(_pendingReg?_pendingReg.email:'')+'</strong></p>'+
+      '<div class="form-group"><label>Verification Code <span class="req">*</span></label><input type="text" id="auth_code" placeholder="输入6位验证码" maxlength="6" onkeydown="if(event.key===\'Enter\')verifySubmit()"></div>'+
+      '<p class="form-hint">💡 演示环境默认验证码：<strong>000000</strong></p>'+
+      '<button class="btn btn-primary" onclick="verifySubmit()">Verify & Complete Registration</button>';
+  }
+  document.getElementById('authContent').innerHTML = html;
+}
+
+function loginSubmit() {
+  var email = document.getElementById('auth_email').value.trim().toLowerCase();
+  var password = document.getElementById('auth_password').value;
+  if (!email || !password) { showToast('请填写 Email 和密码'); return; }
+
+  // 从客户数据库中查找（包含预置的 super_admin 和 admin）
+  var accounts = getAccounts();
+  var account = accounts.filter(function(a){return a.email===email;})[0];
+
+  // 账户不存在
+  if (!account) { showToast('账户不存在，请先注册 / Account not found'); return; }
+
+  // 密码校验
+  if (account.password !== password) { showToast('密码错误 / Incorrect password'); return; }
+
+  // 登录成功
+  setCurrentEmail(email);
+
+  // Transfer guest cart to user cart if any
+  var guestCart = JSON.parse(localStorage.getItem('elysiandex_cart_guest')||'[]');
+  if (guestCart.length > 0) {
+    var userCart = getCart();
+    guestCart.forEach(function(gi){
+      var existing = userCart.filter(function(ui){return ui.productId===gi.productId;})[0];
+      if (existing) existing.qty += gi.qty;
+      else userCart.push(gi);
+    });
+    saveCart(userCart);
+    localStorage.removeItem('elysiandex_cart_guest');
+  }
+  closeAuth(); updateUserUI(); renderProducts();
+  var roleTag = account.role==='super_admin'?' [Super Admin]':(account.role==='admin'?' [Admin]':'');
+  showToast('Welcome, '+account.name+roleTag+' ✓');
+}
+
+// Temp storage for registration data (survives across renderAuth re-renders)
+var _pendingReg = null;
+
+function registerSubmit() {
+  var email = document.getElementById('auth_email').value.trim().toLowerCase();
+  var name = document.getElementById('auth_name').value.trim();
+  var password = document.getElementById('auth_password').value;
+  var company = document.getElementById('auth_company').value.trim();
+  var taxId = document.getElementById('auth_taxId').value.trim();
+  var phone = document.getElementById('auth_phone').value.trim();
+  if (!email || !name || !password) { showToast('请填写 Email、姓名和密码'); return; }
+  if (password.length < 6) { showToast('密码至少6位'); return; }
+  // Check duplicate
+  var accounts = getAccounts();
+  if (accounts.filter(function(a){return a.email===email;})[0]) { showToast('该邮箱已注册，请直接登录 / Email already registered'); return; }
+  // Store pending registration data so verifySubmit can access it
+  _pendingReg = { email: email, name: name, password: password, company: company, taxId: taxId, phone: phone };
+  authMode = 'verify';
+  renderAuth();
+  showToast('验证码已发送（默认: 000000）');
+}
+
+function verifySubmit() {
+  var code = document.getElementById('auth_code').value.trim();
+  if (code !== '000000') { showToast('验证码错误，请输入 000000'); return; }
+  if (!_pendingReg) { showToast('注册会话已过期，请重新注册'); closeAuth(); return; }
+  var r = _pendingReg;
+  _pendingReg = null;
+  // Create account
+  var account = {
+    email: r.email,
+    password: r.password,
+    name: r.name,
+    company: r.company,
+    taxId: r.taxId,
+    phone: r.phone,
+    role: 'customer',
+    verified: true,
+    createdAt: new Date().toISOString().slice(0,10)
+  };
+  var accounts = getAccounts();
+  accounts.push(account);
+  saveAccounts(accounts);
+  setCurrentEmail(r.email);
+  // Auto-bind historical data
+  bindHistoryToAccount(r.email);
+  closeAuth(); updateUserUI(); renderProducts(); showToast('Registration successful! Welcome, '+account.name+' ✓');
+}
+
+// ======================================================================
+// USER UI (top bar)
+// ======================================================================
+function updateUserUI() {
+  var btn = document.getElementById('userBtn');
+  var menu = document.getElementById('userMenu');
+  menu.classList.remove('open');
+  if (isLoggedIn()) {
+    var acct = getCurrentAccount();
+    var roleBadge = '';
+    if (acct.role==='super_admin') roleBadge = ' 🔰';
+    else if (acct.role==='admin') roleBadge = ' ⚙️';
+    btn.className = 'topbar__user-btn logged-in';
+    btn.innerHTML = '👤 <span class="topbar__user-email">'+(acct.name||acct.email)+'</span><span style="font-size:.6875rem">'+roleBadge+'</span>';
+  } else {
+    btn.className = 'topbar__user-btn logged-out';
+    btn.textContent = '👤 Login / Register';
+  }
+}
+
+document.getElementById('userBtn').addEventListener('click', function(e){
+  e.stopPropagation();
+  if (isLoggedIn()) {
+    // Toggle dropdown
+    var menu = document.getElementById('userMenu');
+    menu.classList.toggle('open');
+    if (menu.classList.contains('open')) renderUserMenu();
+  } else {
+    openAuth('login');
+  }
+});
+
+// Close dropdown on outside click
+document.addEventListener('click', function(e) {
+  if (!document.getElementById('userDropdown').contains(e.target)) {
+    document.getElementById('userMenu').classList.remove('open');
+  }
+});
+
+function renderUserMenu() {
+  var acct = getCurrentAccount();
+  var roleLabel = acct && acct.role==='super_admin' ? ' [Super Admin]' : (acct && acct.role==='admin' ? ' [Admin]' : '');
+  var html = '<div style="padding:12px 16px;border-bottom:1px solid #eee">'+
+    '<div style="font-weight:600;font-size:.8125rem">'+((acct&&acct.name)||'')+'</div>'+
+    '<div style="font-size:.6875rem;color:#999">'+(acct&&acct.email||'')+roleLabel+'</div>'+
+    '</div>'+
+    '<button class="user-dropdown__item" onclick="openAccountDetail()"><span class="user-dropdown__icon">👤</span> My Account</button>'+
+    '<button class="user-dropdown__item" onclick="openMyOrders()"><span class="user-dropdown__icon">📦</span> My Orders</button>';
+  if (acct && (acct.role==='admin' || acct.role==='super_admin')) {
+    html += '<button class="user-dropdown__item" onclick="window.open(\'admin.html\',\'_blank\')"><span class="user-dropdown__icon">⚙️</span> Admin Panel</button>';
+  }
+  html += '<div class="user-dropdown__divider"></div>'+
+    '<button class="user-dropdown__item danger" onclick="doLogout()"><span class="user-dropdown__icon">🚪</span> Logout</button>';
+  document.getElementById('userMenu').innerHTML = html;
+}
+
+function doLogout() {
+  setCurrentEmail(null);
+  document.getElementById('userMenu').classList.remove('open');
+  updateUserUI(); renderProducts();
+  showToast('已登出');
+}
+
+function openAccountDetail() {
+  if (!isLoggedIn()) { openAuth('login'); return; }
+  var acct = getCurrentAccount();
+  var addrs = getAddresses();
+  var email = acct.email;
+  // Count orders for this customer
+  var myOrders = getOrders().filter(function(o){return o.customerEmail===email;});
+
+  var html = '<h3>My Account</h3><p class="subtitle">'+acct.email+'</p>'+
+    '<div style="background:#f5f5f7;border-radius:12px;padding:16px;margin-bottom:16px;font-size:.8125rem;line-height:2">'+
+      '<div><strong>姓名:</strong> '+acct.name+'</div>'+
+      '<div><strong>公司:</strong> '+(acct.company||'—')+'</div>'+
+      '<div><strong>税号:</strong> '+(acct.taxId||'—')+'</div>'+
+      '<div><strong>电话:</strong> '+(acct.phone||'—')+'</div>'+
+      '<div><strong>注册时间:</strong> '+acct.createdAt+'</div>'+
+    '</div>'+
+    '<div style="font-weight:600;margin-bottom:8px">📋 Saved Addresses ('+addrs.length+')</div>'+
+    (addrs.length>0 ? addrs.map(function(a,i){return '<div style="font-size:.75rem;color:#666;padding:4px 0">📍 '+a.name+' · '+a.province+' '+a.city+' '+a.detail+'</div>';}).join('') : '<div style="font-size:.75rem;color:#999">暂无地址</div>')+
+    '<div style="font-weight:600;margin:16px 0 8px">📦 My Orders ('+myOrders.length+')</div>'+
+    (myOrders.length>0 ? myOrders.slice(0,5).map(function(o){return '<div style="font-size:.75rem;color:#666;padding:4px 0;border-bottom:1px solid #f5f5f7">#'+o.id+' · ¥'+(o.total||0).toLocaleString()+' · <span style="color:#f59e0b">'+o.status+'</span></div>';}).join('') : '<div style="font-size:.75rem;color:#999">暂无订单</div>')+
+    (myOrders.length>5 ? '<div style="text-align:center;margin-top:8px"><a href="#" style="color:#000;font-weight:600;font-size:.8125rem" onclick="openMyOrders();return false">View all orders →</a></div>' : '')+
+    '<div style="margin-top:16px;display:flex;gap:8px">'+
+      '<button class="btn btn-sm btn-primary" onclick="openMyOrders()" style="flex:1">📦 My Orders</button>'+
+      '<button class="btn btn-sm btn-outline" onclick="closeAuth()" style="flex:1">Close</button>'+
+    '</div>'+
+    '<div style="margin-top:8px;display:flex;gap:8px">'+
+      '<button class="btn btn-sm btn-danger" onclick="doLogout();closeAuth();" style="flex:1">🚪 Logout</button>'+
+    '</div>';
+
+  document.getElementById('authContent').innerHTML = html;
+  document.getElementById('authOverlay').classList.add('open');
+}
+
+function openMyOrders() {
+  if (!isLoggedIn()) { openAuth('login'); return; }
+  var acct = getCurrentAccount();
+  var email = acct.email;
+  var myOrders = getOrders().filter(function(o){return o.customerEmail===email;});
+
+  var html = '<h3>📦 My Orders</h3><p class="subtitle">'+acct.email+'</p>';
+
+  if (myOrders.length === 0) {
+    html += '<div style="text-align:center;padding:40px 20px;color:#999">'+
+      '<div style="font-size:3rem;margin-bottom:16px">📦</div>'+
+      '<p>You have no orders yet</p>'+
+      '<p style="font-size:.8125rem;margin-top:8px">Start shopping to place your first order</p>'+
+    '</div>';
+  } else {
+    html += '<div style="margin-top:16px">';
+    myOrders.forEach(function(order, index) {
+      var statusColor = order.status === 'Pending Payment' ? '#f59e0b' :
+                        order.status === 'Paid' ? '#10b981' :
+                        order.status === 'Shipped' ? '#3b82f6' : '#666';
+      html += '<div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:16px;margin-bottom:12px">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'+
+          '<div>'+
+            '<div style="font-weight:700;font-size:.9375rem">Order #'+order.id+'</div>'+
+            '<div style="font-size:.75rem;color:#999">'+order.date+'</div>'+
+          '</div>'+
+          '<span style="background:'+statusColor+'22;color:'+statusColor+';padding:4px 12px;border-radius:999px;font-size:.75rem;font-weight:600">'+order.status+'</span>'+
+        '</div>'+
+        '<div style="border-top:1px solid #f5f5f7;padding-top:12px">'+
+          '<div style="font-size:.8125rem;color:#555;margin-bottom:8px"><strong>Items:</strong></div>'+
+          '<div style="font-size:.8125rem;color:#666;line-height:1.8">'+order.items.split('; ').map(function(item) {
+            return '<div style="padding:2px 0">• '+item+'</div>';
+          }).join('')+'</div>'+
+        '</div>'+
+        '<div style="border-top:1px solid #f5f5f7;margin-top:12px;padding-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:.8125rem">'+
+          '<div><span style="color:#999">Payment:</span> '+order.paymentMethod+'</div>'+
+          '<div><span style="color:#999">Address:</span> '+(order.address||'—')+'</div>'+
+          '<div><span style="color:#999">Subtotal:</span> ¥'+(order.subtotal||0).toLocaleString()+'</div>'+
+          '<div><span style="color:#999">Shipping:</span> '+(order.shipping===0?'Free':'¥'+(order.shipping||0).toLocaleString())+'</div>'+
+          '<div><span style="color:#999">Tax:</span> ¥'+(order.tax||0).toLocaleString()+'</div>'+
+          '<div style="font-weight:700"><span style="color:#999">Total:</span> ¥'+(order.total||0).toLocaleString()+'</div>'+
+        '</div>'+
+        (order.invoiceType && order.invoiceType !== 'None' ?
+          '<div style="border-top:1px solid #f5f5f7;margin-top:12px;padding-top:12px;font-size:.8125rem">'+
+            '<div style="font-weight:600;margin-bottom:4px">🧾 Invoice</div>'+
+            '<div style="color:#666">Type: '+order.invoiceType+'</div>'+
+            '<div style="color:#666">Title: '+order.invoiceTitle+'</div>'+
+            '<div style="color:#666">Email: '+order.invoiceEmail+'</div>'+
+          '</div>' : '')+
+      '</div>';
+    });
+    html += '</div>';
+  }
+
+  html += '<div style="margin-top:16px;display:flex;gap:8px">'+
+    '<button class="btn btn-sm btn-outline" onclick="openAccountDetail()" style="flex:1">← Back to Account</button>'+
+    '<button class="btn btn-sm btn-outline" onclick="closeAuth()" style="flex:1">Close</button>'+
+  '</div>';
+
+  document.getElementById('authContent').innerHTML = html;
+  document.getElementById('authOverlay').classList.add('open');
+}
+
+// ======================================================================
+// PRODUCT GRID
+// ======================================================================
+var activeCat = 'all';
+
+function renderProducts() {
+  var filtered = activeCat==='all' ? DB_PRODUCTS : DB_PRODUCTS.filter(function(p){return p.cat===activeCat;});
+  var cart = getCart();
+  var html = '';
+  filtered.forEach(function(p){
+    var ci = cart.filter(function(i){return i.productId===p.id;})[0];
+    var inCart = ci ? ci.qty : 0;
+    html += '<div class="product-card">'+
+      '<div class="product-card__img"><img src="'+p.img+'" alt="'+p.name+'" loading="lazy"></div>'+
+      '<div class="product-card__body">'+
+        '<div class="product-card__sku">SKU: '+p.sku+'</div>'+
+        '<div class="product-card__name">'+p.name+'</div>'+
+        '<div class="product-card__desc">'+p.desc+'</div>'+
+        '<div class="product-card__footer">'+
+          '<span class="product-card__price">¥'+p.price.toLocaleString()+'</span>'+
+          (inCart===0
+            ? '<button class="product-card__add" onclick="addToCart(\''+p.id+'\')">Add to Cart</button>'
+            : '<div class="product-card__qty">'+
+                '<button onclick="qtyChange(\''+p.id+'\','+(inCart-1)+')">−</button>'+
+                '<span>'+inCart+'</span>'+
+                '<button onclick="qtyChange(\''+p.id+'\','+(inCart+1)+')">+</button>'+
+              '</div>')+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  });
+  document.getElementById('catFilter').innerHTML = DB_CATEGORIES.map(function(c){
+    return '<button class="'+(c.id===activeCat?'active':'')+'" onclick="setCat(\''+c.id+'\')">'+c.name+'</button>';
+  }).join('');
+  document.getElementById('productGrid').innerHTML = html;
+  updateCartBadge();
+  updateUserUI();
+}
+
+function setCat(id) { activeCat=id; renderProducts(); }
+function addToCart(pid) {
+  var cart = getCart();
+  var ci = cart.filter(function(i){return i.productId===pid;})[0];
+  if (ci) ci.qty++; else cart.push({productId:pid, qty:1});
+  saveCart(cart); renderProducts(); showToast('Added to cart ✓');
+}
+function qtyChange(pid, qty) {
+  var cart = getCart();
+  if (qty<=0) cart = cart.filter(function(i){return i.productId!==pid;});
+  else { var ci=cart.filter(function(i){return i.productId===pid;})[0]; if(ci) ci.qty=qty; }
+  saveCart(cart); renderProducts();
+}
+
+// ======================================================================
+// CART PANEL
+// ======================================================================
+function openCart() {
+  document.getElementById('cartOverlay').classList.add('open');
+  document.getElementById('cartPanel').classList.add('open');
+  renderCartPanel();
+}
+function closeCart() {
+  document.getElementById('cartOverlay').classList.remove('open');
+  document.getElementById('cartPanel').classList.remove('open');
+}
+document.getElementById('cartBtn').addEventListener('click',openCart);
+document.getElementById('cartClose').addEventListener('click',closeCart);
+document.getElementById('cartOverlay').addEventListener('click',closeCart);
+
+function updateCartBadge() { document.getElementById('cartBadge').textContent = cartCount(); }
+
+function renderCartPanel() {
+  var body = document.getElementById('cartPanelBody');
+  var checkoutBtn = document.getElementById('cartCheckoutBtn');
+  var totalEl = document.getElementById('cartPanelTotal');
+  var cart = getCart();
+
+  if (cart.length===0) {
+    body.innerHTML = '<div class="cart-panel__empty"><div style="font-size:3rem;margin-bottom:12px">🛒</div><p>Your cart is empty</p></div>';
+    checkoutBtn.disabled = true;
+    totalEl.textContent = '¥0';
+    return;
+  }
+  var subtotal = cartSubtotal();
+  var html = '';
+  cart.forEach(function(item){
+    var p = findProduct(item.productId); if(!p) return;
+    html += '<div class="cart-mini-item">'+
+      '<div class="cart-mini-item__img"><img src="'+p.img+'" alt=""></div>'+
+      '<div class="cart-mini-item__info">'+
+        '<div class="cart-mini-item__name">'+p.name+'</div>'+
+        '<div class="cart-mini-item__price">¥'+p.price.toLocaleString()+' × '+item.qty+'</div>'+
+        '<div class="cart-mini-item__row">'+
+          '<span style="font-weight:600;font-size:.8125rem">¥'+(p.price*item.qty).toLocaleString()+'</span>'+
+          '<button class="cart-mini-item__remove" onclick="qtyChange(\''+p.id+'\',0);renderCartPanel();renderProducts();">Remove</button>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  });
+  body.innerHTML = html;
+  totalEl.textContent = '¥'+subtotal.toLocaleString();
+  checkoutBtn.disabled = false;
+  checkoutBtn.onclick = function() { closeCart(); startWizard(); };
+}
+
+// ======================================================================
+// CHECKOUT WIZARD
+// ======================================================================
+var wizardStep = 0;
+var wizardInvoiceNeeded = null;
+var wizardSelectedAddr = -1;
+var wizardPayment = 'bank';
+
+function startWizard() {
+  // LOGIN REQUIRED
+  if (!isLoggedIn()) {
+    showToast('请先登录再进行结算');
+    openAuth('login');
+    return;
+  }
+  wizardStep = 0;
+  wizardInvoiceNeeded = null;
+  wizardPayment = 'bank';
+  var addrs = getAddresses();
+  wizardSelectedAddr = addrs.length > 0 ? 0 : -1;
+  document.getElementById('wizardOverlay').classList.add('open');
+  renderWizard();
+}
+function closeWizard() { document.getElementById('wizardOverlay').classList.remove('open'); }
+document.getElementById('wizardOverlay').addEventListener('click',function(e){if(e.target===this)closeWizard();});
+
+function renderWizard() {
+  var steps = ['Cart','Invoice','Shipping','Payment','Confirm'];
+  var cart = getCart();
+  var subtotal = cartSubtotal();
+  var shipping = subtotal >= 50000 ? 0 : 2000;
+  var tax = Math.round(subtotal * 0.13);
+  var total = subtotal + shipping + tax;
+  var addrs = getAddresses();
+
+  // Dots
+  document.getElementById('wizardDots').innerHTML = steps.map(function(s,i){
+    var cls = i < wizardStep ? 'done' : (i === wizardStep ? 'active' : '');
+    return '<span class="wizard-dot '+cls+'"></span>';
+  }).join('');
+  document.getElementById('wizardTitle').textContent = steps[wizardStep];
+
+  var body = document.getElementById('wizardBody');
+  var footer = document.getElementById('wizardFooter');
+
+  // STEP 0: Cart Review
+  if (wizardStep === 0) {
+    body.innerHTML = '<div class="wizard-step active"><h3>Step 1: Order Review</h3><p class="subtitle">确认您的订单商品</p>'+
+      cart.map(function(item){var p=findProduct(item.productId);if(!p)return'';return '<div class="order-summary-row"><span>'+p.name+' × '+item.qty+'</span><span>¥'+(p.price*item.qty).toLocaleString()+'</span></div>';}).join('')+
+      '<hr style="margin:12px 0;border-color:#f0f0f0">'+
+      '<div class="order-summary-row"><span>Subtotal</span><span>¥'+subtotal.toLocaleString()+'</span></div>'+
+      '<div class="order-summary-row"><span>Shipping</span><span>'+(shipping===0?'Free':'¥'+shipping.toLocaleString())+'</span></div>'+
+      '<div class="order-summary-row"><span>Est. Tax (13%)</span><span>¥'+tax.toLocaleString()+'</span></div>'+
+      '<div class="order-summary-row total"><span>Estimated Total</span><span>¥'+total.toLocaleString()+'</span></div>'+
+    '</div>';
+    footer.innerHTML = '<span></span><button class="btn btn-primary" style="width:auto" onclick="wizardNext()">Next: Invoice →</button>';
+  }
+
+  // STEP 1: Invoice
+  else if (wizardStep === 1) {
+    body.innerHTML = '<div class="wizard-step active"><h3>Step 2: 是否需要发票？</h3><p class="subtitle">选择是否需要开具发票</p>'+
+      '<div class="choice-row">'+
+        '<div class="choice-card '+(wizardInvoiceNeeded===true?'selected':'')+'" onclick="wizSetInvoice(true)"><div class="choice-card__icon">🧾</div><div class="choice-card__title">需要发票</div><div class="choice-card__desc">对公转账，开具增值税发票</div></div>'+
+        '<div class="choice-card '+(wizardInvoiceNeeded===false?'selected':'')+'" onclick="wizSetInvoice(false)"><div class="choice-card__icon">💰</div><div class="choice-card__title">不需要发票</div><div class="choice-card__desc">直接下单，无需开票</div></div>'+
+      '</div>'+
+      '<div id="wizInvForm" style="display:'+(wizardInvoiceNeeded===true?'block':'none')+'">'+
+        '<div class="form-group"><label>发票抬头 / Company Name <span class="req">*</span></label><input type="text" id="wiz_invTitle" placeholder="公司全称"></div>'+
+        '<div class="form-group"><label>纳税人识别号 / Tax ID <span class="req">*</span></label><input type="text" id="wiz_invTaxId" placeholder="统一社会信用代码"></div>'+
+        '<div class="form-row">'+
+          '<div class="form-group"><label>发票类型</label><select id="wiz_invType"><option>增值税专用发票</option><option>增值税普通发票</option><option>电子发票</option></select></div>'+
+          '<div class="form-group"><label>收票邮箱 <span class="req">*</span></label><input type="email" id="wiz_invEmail" placeholder="invoice@company.com"></div>'+
+        '</div>'+
+        '<div class="form-row">'+
+          '<div class="form-group"><label>开户银行</label><input type="text" id="wiz_invBank" placeholder="开户行全称"></div>'+
+          '<div class="form-group"><label>银行账号</label><input type="text" id="wiz_invAccount" placeholder="银行账号"></div>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+    footer.innerHTML = '<button class="btn btn-outline" style="width:auto" onclick="wizardBack()">← Back</button><button class="btn btn-primary" style="width:auto" onclick="wizardNext()">Next: Shipping →</button>';
+  }
+
+  // STEP 2: Shipping
+  else if (wizardStep === 2) {
+    var addrHtml = addrs.length===0 ? '<p class="subtitle">暂无保存的地址，请添加新地址</p>' :
+      '<p class="subtitle">选择已有地址或添加新地址</p>'+
+      addrs.map(function(a,i){ return '<div class="address-card '+(wizardSelectedAddr===i?'selected':'')+'" onclick="wizSelectAddr('+i+')"><div class="address-card__name">'+a.name+' · '+a.phone+'</div><div class="address-card__detail">'+a.province+' '+a.city+' '+a.district+' '+a.detail+'</div></div>'; }).join('');
+
+    body.innerHTML = '<div class="wizard-step active"><h3>Step 3: Shipping Address（收货地址）</h3>'+addrHtml+
+      '<button style="width:100%;padding:12px;border:2px dashed #ccc;border-radius:12px;background:#fafafa;cursor:pointer;font-size:.8125rem;margin-top:8px" onclick="wizShowNewAddr()">+ Add New Address</button>'+
+      '<div id="wizNewAddr" style="display:none;margin-top:16px">'+
+        '<div class="form-row"><div class="form-group"><label>收货人 <span class="req">*</span></label><input type="text" id="wiz_aName" placeholder="姓名"></div><div class="form-group"><label>电话 <span class="req">*</span></label><input type="tel" id="wiz_aPhone" placeholder="手机号"></div></div>'+
+        '<div class="form-row"><div class="form-group"><label>省份 <span class="req">*</span></label><select id="wiz_aProv"><option value="">选择</option><option>北京市</option><option>上海市</option><option>广东省</option><option>浙江省</option><option>江苏省</option><option>四川省</option><option>湖北省</option></select></div><div class="form-group"><label>城市 <span class="req">*</span></label><input type="text" id="wiz_aCity" placeholder="城市"></div><div class="form-group"><label>区县</label><input type="text" id="wiz_aDist" placeholder="区/县"></div></div>'+
+        '<div class="form-group"><label>详细地址 <span class="req">*</span></label><textarea id="wiz_aDetail" rows="2" placeholder="街道门牌等详细信息"></textarea></div>'+
+        '<button class="btn btn-primary btn-sm" onclick="wizSaveAddr()">Save Address</button>'+
+      '</div>'+
+    '</div>';
+    footer.innerHTML = '<button class="btn btn-outline" style="width:auto" onclick="wizardBack()">← Back</button><button class="btn btn-primary" style="width:auto" id="wizAddrNext" '+(wizardSelectedAddr<0?'disabled':'')+' onclick="wizardNext()">Next: Payment →</button>';
+  }
+
+  // STEP 3: Payment
+  else if (wizardStep === 3) {
+    body.innerHTML = '<div class="wizard-step active"><h3>Step 4: Payment Method（支付方式）</h3><p class="subtitle">选择支付方式（可切换）</p>'+
+      '<div class="choice-row">'+
+        '<div class="choice-card selected" id="payBankCard" onclick="wizSelectPayment(\'bank\')">'+
+          '<div class="choice-card__icon">🏦</div><div class="choice-card__title">对公转账</div><div class="choice-card__desc">企业网银 / 柜台转账</div></div>'+
+        '<div class="choice-card" id="payAlipayCard" onclick="wizSelectPayment(\'alipay\')">'+
+          '<div class="choice-card__icon">💙</div><div class="choice-card__title">支付宝</div><div class="choice-card__desc">扫码支付 / 企业对公</div></div>'+
+      '</div>'+
+      '<div id="payBankInfo">'+
+        '<div style="background:#fafafa;border-radius:12px;padding:16px;font-size:.8125rem;line-height:2">'+
+          '<div style="font-weight:600">收款账户</div>'+
+          '<div>户名：<strong>Elysiandex 科技有限公司</strong></div>'+
+          '<div>账号：<strong>6228 0000 1234 5678 901</strong></div>'+
+          '<div>开户行：<strong>中国工商银行北京分行海淀支行</strong></div>'+
+        '</div>'+
+      '</div>'+
+      '<div id="payAlipayInfo" style="display:none">'+
+        '<div class="qr-container">'+
+          '<div style="font-weight:600;margin-bottom:12px">支付宝扫码支付</div>'+
+          '<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https%3A%2F%2Fwww.alipay.com%2Fqr%2Felysiandex%3Forder%3Ddemo" alt="Alipay QR Code" onerror="this.src=\'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22%3E%3Crect fill=%22%23f5f5f7%22 width=%22200%22 height=%22200%22/%3E%3Ctext x=%22100%22 y=%2290%22 text-anchor=%22middle%22 font-size=%2216%22 fill=%22%23999%22%3EAlipay QR%3C/text%3E%3Ctext x=%22100%22 y=%22115%22 text-anchor=%22middle%22 font-size=%2213%22 fill=%22%23666%22%3E支付宝扫码%3C/text%3E%3C/svg%3E\'">'+
+          '<p class="qr-hint">📱 打开支付宝扫描二维码完成支付<br>支付完成后请备注订单编号</p>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+    footer.innerHTML = '<button class="btn btn-outline" style="width:auto" onclick="wizardBack()">← Back</button><button class="btn btn-primary" style="width:auto" onclick="wizardNext()">Submit Order →</button>';
+  }
+
+  // STEP 4: Confirm
+  else if (wizardStep === 4) {
+    var orderId = 'ELX-'+Date.now().toString(36).toUpperCase();
+    var addr = addrs[wizardSelectedAddr] || {};
+    var invInfo = null;
+    if (wizardInvoiceNeeded) {
+      invInfo = {
+        title: document.getElementById('wiz_invTitle')?document.getElementById('wiz_invTitle').value:'',
+        taxId: document.getElementById('wiz_invTaxId')?document.getElementById('wiz_invTaxId').value:'',
+        type: document.getElementById('wiz_invType')?document.getElementById('wiz_invType').value:'',
+        email: document.getElementById('wiz_invEmail')?document.getElementById('wiz_invEmail').value:'',
+        bank: document.getElementById('wiz_invBank')?document.getElementById('wiz_invBank').value:'',
+        account: document.getElementById('wiz_invAccount')?document.getElementById('wiz_invAccount').value:'',
+      };
+    }
+    var acct = getCurrentAccount();
+    var order = {
+      id: orderId,
+      date: new Date().toISOString().slice(0,10),
+      customerEmail: acct.email,
+      customerName: acct.name,
+      company: acct.company||'',
+      items: cart.map(function(i){var p=findProduct(i.productId);return(p?p.name:'?')+' ×'+i.qty;}).join('; '),
+      subtotal: subtotal, tax: wizardInvoiceNeeded?tax:0, shipping: shipping, total: total,
+      paymentMethod: wizardPayment==='alipay'?'Alipay':'Bank Transfer',
+      invoiceType: invInfo?invInfo.type:'None',
+      invoiceTitle: invInfo?invInfo.title:'',
+      invoiceTaxId: invInfo?invInfo.taxId:'',
+      invoiceEmail: invInfo?invInfo.email:'',
+      address: (addr.province||'')+' '+(addr.city||'')+' '+(addr.detail||''),
+      status: 'Pending Payment'
+    };
+    var allOrders = getOrders(); allOrders.unshift(order); saveOrders(allOrders);
+    // Update account info from invoice
+    if (invInfo && invInfo.title) { acct.company = invInfo.title; acct.taxId = invInfo.taxId; }
+    var accounts = getAccounts();
+    var accIdx = accounts.findIndex(function(a){return a.email===acct.email;});
+    if (accIdx>=0) { accounts[accIdx] = acct; saveAccounts(accounts); }
+    // Clear cart
+    saveCart([]);
+
+    body.innerHTML = '<div class="wizard-step active" style="text-align:center;padding:20px 0">'+
+      '<div style="font-size:3rem;margin-bottom:16px">✅</div><h3>Order Submitted!</h3>'+
+      '<p class="subtitle">请按以下信息完成对公转账，到账后安排发货</p>'+
+      '<div style="background:#f5f5f7;border-radius:12px;padding:16px;margin:16px 0;font-size:.9375rem">'+
+        '<div style="font-weight:700;margin-bottom:4px">Order ID: '+orderId+'</div>'+
+        '<div style="color:#666">Total: ¥'+total.toLocaleString()+'</div>'+
+      '</div>'+
+      (invInfo?'<p style="font-size:.8125rem;color:#999">发票将发送至 '+invInfo.email+'</p>':'')+
+    '</div>';
+    footer.innerHTML = '<span></span><button class="btn btn-primary" style="width:auto" onclick="closeWizard();renderProducts();showToast(\'Order submitted! ✓\')">Done</button>';
+  }
+}
+
+function wizSetInvoice(val) { wizardInvoiceNeeded=val; renderWizard(); }
+function wizSelectAddr(i) { wizardSelectedAddr=i; renderWizard(); }
+function wizSelectPayment(method) {
+  wizardPayment = method;
+  document.getElementById('payBankCard').classList.toggle('selected', method==='bank');
+  document.getElementById('payAlipayCard').classList.toggle('selected', method==='alipay');
+  document.getElementById('payBankInfo').style.display = method==='bank' ? '' : 'none';
+  document.getElementById('payAlipayInfo').style.display = method==='alipay' ? '' : 'none';
+}
+function wizShowNewAddr() { wizardSelectedAddr=-1; document.getElementById('wizNewAddr').style.display='block'; }
+function wizSaveAddr() {
+  var a = {
+    name: document.getElementById('wiz_aName').value.trim(),
+    phone: document.getElementById('wiz_aPhone').value.trim(),
+    province: document.getElementById('wiz_aProv').value,
+    city: document.getElementById('wiz_aCity').value.trim(),
+    district: document.getElementById('wiz_aDist').value.trim(),
+    detail: document.getElementById('wiz_aDetail').value.trim(),
+  };
+  if (!a.name||!a.phone||!a.province||!a.city||!a.detail) { showToast('请完整填写地址'); return; }
+  var addrs = getAddresses(); addrs.push(a); saveAddresses(addrs);
+  wizardSelectedAddr = addrs.length-1;
+  renderWizard(); showToast('Address saved ✓');
+}
+function wizardNext() {
+  if (wizardStep===1) {
+    if (wizardInvoiceNeeded===null) { showToast('请选择是否需要发票'); return; }
+    if (wizardInvoiceNeeded) {
+      var title=document.getElementById('wiz_invTitle').value.trim();
+      var taxId=document.getElementById('wiz_invTaxId').value.trim();
+      var email=document.getElementById('wiz_invEmail').value.trim();
+      if (!title||!taxId||!email) { showToast('请完整填写发票信息'); return; }
+    }
+  }
+  if (wizardStep===2 && wizardSelectedAddr<0) { showToast('请选择或添加收货地址'); return; }
+  if (wizardStep>=4) return;
+  wizardStep++; renderWizard();
+}
+function wizardBack() { if (wizardStep>0) { wizardStep--; renderWizard(); } }
+
+// ======================================================================
+// TOAST
+// ======================================================================
+function showToast(msg) {
+  var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(function(){t.classList.remove('show');},2000);
+}
+
+// ======================================================================
+// INIT
+// ======================================================================
+// 初始化：先加载 customers.xlsx，再渲染页面
+loadAccountsFromExcel(function(){
+  renderProducts();
+  updateUserUI();
+});
+</script>
+
+<!-- Footer -->
+<footer style="background:#f9f9f9;color:#111;padding:48px 0 32px;margin-top:80px">
+  <div style="max-width:1300px;margin:0 auto;padding:0 24px;text-align:center">
+    <div style="font-size:1.5rem;font-weight:300;letter-spacing:.1em;margin-bottom:16px;color:#333">Spirit of Dexterity. Reaching the Ultimate Centimeter</div>
+    <div style="font-size:.8125rem;color:#999;margin-bottom:8px">© 2026 Elysiandex. All rights reserved.</div>
+    <div style="font-size:.75rem;color:#bbb">Built with precision for the future of robotic manipulation</div>
+  </div>
+</footer>
+
+</body>
+</html>
